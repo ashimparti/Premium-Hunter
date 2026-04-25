@@ -455,14 +455,9 @@ def render_html(results, scan_date):
         
         trade_html = '—'
         if pt:
-            tier_badge = ''
-            if r['ticker'] in QUALITY_TIER:
-                tier_badge = '<span style="background:#1e40af; color:#dbeafe; font-size:9px; padding:2px 6px; border-radius:3px; margin-left:6px;">QUALITY</span>'
-            else:
-                tier_badge = '<span style="background:#7c2d12; color:#fdba74; font-size:9px; padding:2px 6px; border-radius:3px; margin-left:6px;">HUNT</span>'
             trade_html = f"""
                 <div class="trade">
-                    <div class="trade-strike">${pt['strike']:.0f}P{tier_badge}</div>
+                    <div class="trade-strike">${pt['strike']:.0f}P</div>
                     <div class="trade-meta">{pt['expiry'][:7]} · {pt['dte']}d · {pt['delta']*100:.1f}Δ</div>
                     <div class="trade-credit">${pt['mid']*100:.0f} mid · {pt['pct_otm']:.0f}% OTM</div>
                 </div>
