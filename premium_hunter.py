@@ -1152,8 +1152,8 @@ def score(d):
             flags.append(f'REJECT: {es["red_x_count"]}/8 gap risk ({cap_tier})')
             disqualified = True
     
-    # OI minimum check
-    if p and p.get('oi', 0) < min_oi:
+    # OI minimum check (only enforced for MID/SMALL caps; LARGE uses OI as scoring bonus)
+    if cap_tier in ('MID', 'SMALL') and p and p.get('oi', 0) < min_oi:
         flags.append(f'REJECT: OI {p.get("oi",0)} < {min_oi} ({cap_tier})')
         disqualified = True
     
