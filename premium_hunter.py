@@ -87,6 +87,266 @@ WATCHLIST = [
 
 
 # ==============================================================
+# ECONOMIC CALENDAR (auto-generated, no API needed)
+# ==============================================================
+
+# 2026 FOMC meeting dates (Fed publishes annually)
+FOMC_2026 = [
+    (datetime(2026, 1, 28), 14, 0),
+    (datetime(2026, 3, 18), 14, 0),
+    (datetime(2026, 4, 29), 14, 0),
+    (datetime(2026, 6, 17), 14, 0),
+    (datetime(2026, 7, 29), 14, 0),
+    (datetime(2026, 9, 16), 14, 0),
+    (datetime(2026, 11, 4), 14, 0),
+    (datetime(2026, 12, 16), 14, 0),
+]
+# 2027 FOMC (estimated - Fed publishes in autumn)
+FOMC_2027 = [
+    (datetime(2027, 1, 27), 14, 0),
+    (datetime(2027, 3, 17), 14, 0),
+    (datetime(2027, 4, 28), 14, 0),
+    (datetime(2027, 6, 16), 14, 0),
+    (datetime(2027, 7, 28), 14, 0),
+    (datetime(2027, 9, 15), 14, 0),
+    (datetime(2027, 11, 3), 14, 0),
+    (datetime(2027, 12, 15), 14, 0),
+]
+
+FOMC_DATES = FOMC_2026 + FOMC_2027
+
+
+def first_friday(year, month):
+    """Get the first Friday of a month (NFP date)."""
+    d = datetime(year, month, 1)
+    while d.weekday() != 4:  # 4 = Friday
+        d += timedelta(days=1)
+    return d
+
+
+def last_friday(year, month):
+    """Get the last Friday of a month (PCE date)."""
+    if month == 12:
+        next_first = datetime(year + 1, 1, 1)
+    else:
+        next_first = datetime(year, month + 1, 1)
+    last = next_first - timedelta(days=1)
+    while last.weekday() != 4:
+        last -= timedelta(days=1)
+    return last
+
+
+def get_upcoming_economic_events(days_ahead=14):
+    """Generate upcoming high/medium-impact US economic events."""
+    today = datetime.now()
+    end_date = today + timedelta(days=days_ahead)
+    events = []
+    
+    # FOMC announcements (HIGH)
+    for fomc_date, hour, minute in FOMC_DATES:
+        event_dt = fomc_date.replace(hour=hour, minute=minute)
+        if today <= event_dt <= end_date:
+            events.append({
+                'date': event_dt,
+                'name': 'FOMC Decision',
+                'impact': 'HIGH',
+                'icon': '🚨',
+            })
+    
+    # NFP — first Friday of next 1-2 months at 8:30 AM ET
+    for month_offset in range(2):
+        if today.month + month_offset > 12:
+            year = today.year + 1
+            month = today.month + month_offset - 12
+        else:
+            year = today.year
+            month = today.month + month_offset
+        nfp = first_friday(year, month).replace(hour=8, minute=30)
+        if today <= nfp <= end_date:
+            events.append({
+                'date': nfp,
+                'name': 'Non-Farm Payrolls',
+                'impact': 'HIGH',
+                'icon': '🚨',
+            })
+    
+    # PCE — last Friday at 8:30 AM ET (Fed's preferred inflation gauge)
+    for month_offset in range(2):
+        if today.month + month_offset > 12:
+            year = today.year + 1
+            month = today.month + month_offset - 12
+        else:
+            year = today.year
+            month = today.month + month_offset
+        pce = last_friday(year, month).replace(hour=8, minute=30)
+        if today <= pce <= end_date:
+            events.append({
+                'date': pce,
+                'name': 'Core PCE',
+                'impact': 'HIGH',
+                'icon': '🚨',
+            })
+    
+    # CPI — typically 2nd Tuesday/Wednesday of month at 8:30 AM ET
+    for month_offset in range(2):
+        if today.month + month_offset > 12:
+            year = today.year + 1
+            month = today.month + month_offset - 12
+        else:
+            year = today.year
+            month = today.month + month_offset
+        # Approximate CPI date as 12th of month, find nearest Tue/Wed
+        cpi_target = datetime(year, month, 12, 8, 30)
+        while cpi_target.weekday() not in (1, 2):  # Tue=1, Wed=2
+            cpi_target += timedelta(days=1)
+        if today <= cpi_target <= end_date:
+            events.append({
+                'date': cpi_target,
+                'name': 'CPI Inflation',
+                'impact': 'HIGH',
+                'icon': '🚨',
+            })
+    
+    # Initial Jobless Claims — every Thursday at 8:30 AM ET (MEDIUM)
+    d = today
+    while d <= end_date:
+        if d.weekday() == 3:  # Thursday
+            event_dt = d.replace(hour=8, minute=30, second=0, microsecond=0)
+            if event_dt > today:
+                events.append({
+                    'date': event_dt,
+                    'name': 'Jobless Claims',
+                    'impact': 'MEDIUM',
+                    'icon': '⚠️',
+                })
+        d += timedelta(days=1)
+    
+    # GDP Advance — quarterly, late month of Apr/Jul/Oct/Jan at 8:30 AM ET
+    gdp_months = [(2026, 4, 30), (2026, 7, 30), (2026, 10, 29), (2027, 1, 28),
+                  (2027, 4, 29), (2027, 7, 29), (2027, 10, 28)]
+    for y, m, d_day in gdp_months:
+        gdp_dt = datetime(y, m, d_day, 8, 30)
+        if today <= gdp_dt <= end_date:
+            events.append({
+                'date': gdp_dt,
+                'name': 'GDP Advance',
+                'impact': 'HIGH',
+                'icon': '🚨',
+            })
+    
+    # Sort by date
+    events.sort(key=lambda e: e['date'])
+    return events
+
+
+def et_to_dubai(et_datetime):
+    """Convert ET to Dubai time. ET is UTC-4 (EDT) or UTC-5 (EST). Dubai is UTC+4.
+    For simplicity assume EDT (Mar-Nov), so Dubai = ET + 8 hours."""
+    # Determine if EDT or EST (rough — DST runs ~Mar to Nov)
+    month = et_datetime.month
+    if 3 <= month <= 11:
+        offset_hours = 8  # EDT to GST
+    else:
+        offset_hours = 9  # EST to GST
+    return et_datetime + timedelta(hours=offset_hours)
+
+
+# ==============================================================
+# VIX CAUTION MODE
+# ==============================================================
+
+def get_caution_mode(vix_value):
+    """Determine trading mode based on VIX level."""
+    if vix_value is None:
+        return {
+            'mode': 'UNKNOWN',
+            'message': 'VIX data unavailable — proceed cautiously.',
+            'class': 'warn',
+            'fire_recommendation': 'Standard sizing',
+        }
+    if vix_value < 16:
+        return {
+            'mode': 'CALM',
+            'message': 'VIX low — sell premium aggressively',
+            'class': 'good',
+            'fire_recommendation': 'Full size, all picks valid',
+        }
+    if vix_value < 21:
+        return {
+            'mode': 'NORMAL',
+            'message': 'VIX normal — standard sizing',
+            'class': 'good',
+            'fire_recommendation': 'Standard sizing across all picks',
+        }
+    if vix_value < 25:
+        return {
+            'mode': 'CAUTIOUS',
+            'message': f'VIX {vix_value:.1f} elevated — reduce size, focus on QW only',
+            'class': 'warn',
+            'fire_recommendation': 'Half size · skip Premium Hunt · stick to Quality Wheel',
+        }
+    if vix_value < 30:
+        return {
+            'mode': 'STAND DOWN',
+            'message': f'VIX {vix_value:.1f} HIGH — pause new puts, focus on SPY index plays',
+            'class': 'bad',
+            'fire_recommendation': 'STOP new picks · Manage existing · Consider SPY puts',
+        }
+    return {
+        'mode': 'CRISIS',
+        'message': f'VIX {vix_value:.1f} CRISIS — DO NOT FIRE new positions',
+        'class': 'bad',
+        'fire_recommendation': 'Halt all new trades · Defensive only',
+    }
+
+
+# ==============================================================
+# SMART FIRE-TIME ADJUSTMENT
+# ==============================================================
+
+def adjust_fire_window(default_fire_dt, events):
+    """Adjust fire time based on nearby high-impact events.
+    Returns (adjusted_dt, warning_text)."""
+    if not events:
+        return default_fire_dt, None
+    
+    # Look for events within 4 hours of default fire time
+    fire_dt_dubai = default_fire_dt
+    nearby_events = []
+    for ev in events:
+        ev_dubai = et_to_dubai(ev['date'])
+        if ev['impact'] != 'HIGH':
+            continue
+        time_diff_hours = (ev_dubai - fire_dt_dubai).total_seconds() / 3600
+        if -4 <= time_diff_hours <= 4:
+            nearby_events.append({
+                'event': ev,
+                'dubai_time': ev_dubai,
+                'hours_offset': time_diff_hours,
+            })
+    
+    if not nearby_events:
+        return default_fire_dt, None
+    
+    # Find the soonest event after fire window
+    upcoming = [e for e in nearby_events if e['hours_offset'] > -1]
+    if not upcoming:
+        return default_fire_dt, None
+    
+    soonest = min(upcoming, key=lambda e: e['hours_offset'])
+    event = soonest['event']
+    ev_dubai = soonest['dubai_time']
+    
+    # If event is within 2 hours after fire window, fire 1 hour BEFORE event
+    if 0 <= soonest['hours_offset'] <= 2:
+        adjusted = ev_dubai - timedelta(hours=1)
+        warning = f"Fire 1hr before {event['name']} @ {ev_dubai.strftime('%I:%M %p')} Dubai"
+        return adjusted, warning
+    
+    return default_fire_dt, None
+
+
+# ==============================================================
 # MARKET DASHBOARD
 # ==============================================================
 
@@ -802,96 +1062,84 @@ def fund_class(value, kind):
     return 'fund-warn', str(value)
 
 
-def render_html(results, scan_date, dashboard):
+def render_html(results, scan_date, dashboard, economic_events, caution):
     results.sort(key=lambda x: (x['score'], x['edge_ratio']), reverse=True)
     
     top_picks = [r for r in results if r['score'] >= 7]
     watch = [r for r in results if 5 <= r['score'] < 7]
     
-    # Group by date
+    # Group all picks (top + watch) by date for date-first layout
+    all_picks = [(r, 'top') for r in top_picks] + [(r, 'watch') for r in watch]
     by_date = {}
-    for r in top_picks:
+    for r, src in all_picks:
         date_key = r.get('next_earnings', 'TBD')
-        timing = r.get('earnings_timing', 'TBD')
         if date_key not in by_date:
-            by_date[date_key] = {'BMO': [], 'AMC': [], 'TBD': []}
-        by_date[date_key][timing].append(r)
+            by_date[date_key] = []
+        by_date[date_key].append((r, src))
     
     sorted_dates = sorted([d for d in by_date.keys() if d != 'TBD'])
     
-    def build_signals_box(r):
-        ins = r.get('insider_activity', {})
-        bb = r.get('buybacks', {})
-        eps = r.get('eps_streak', {})
-        rev = r.get('analyst_revisions', {})
-        rf = r.get('red_flags', {})
-        si = r.get('short_interest')
-        
-        lines = []
-        # Insider
-        if ins.get('signal') == 'bullish':
-            lines.append(f'<div class="signal-line">🟢 Insider buying: {ins["buys"]} buys, {ins["sells"]} sells last 30d</div>')
-        elif ins.get('signal') == 'bearish':
-            lines.append(f'<div class="signal-line bad">⚠️ Insider selling: {ins["buys"]} buys, {ins["sells"]} sells last 30d</div>')
-        elif ins.get('signal') == 'neutral':
-            lines.append(f'<div class="signal-line">⚪ Insider activity: balanced</div>')
-        
-        # Buybacks
-        if bb.get('signal') == 'strong':
-            lines.append(f'<div class="signal-line">🟢 Strong buybacks: ${bb["amount"]/1e9:.1f}B last 4Q</div>')
-        elif bb.get('signal') == 'moderate':
-            lines.append(f'<div class="signal-line">🟢 Buybacks: ${bb["amount"]/1e9:.1f}B last 4Q</div>')
-        
-        # EPS streak
-        if eps.get('streak') and eps['streak'] != 'unknown':
-            beats = eps['beats']
-            total = beats + eps['misses']
-            if beats >= 3:
-                lines.append(f'<div class="signal-line">🟢 EPS beat streak: {eps["streak"]} last quarters</div>')
-            elif eps['misses'] >= 2:
-                lines.append(f'<div class="signal-line bad">⚠️ EPS miss streak: {eps["streak"]} last quarters</div>')
-            else:
-                lines.append(f'<div class="signal-line">⚪ EPS mixed: {eps["streak"]} beats</div>')
-        
-        # Revisions
-        if rev.get('signal') == 'bullish':
-            lines.append(f'<div class="signal-line">🟢 Analyst upgrades: +{rev["upgrades"]}, -{rev["downgrades"]} (last 30d)</div>')
-        elif rev.get('signal') == 'bearish':
-            lines.append(f'<div class="signal-line bad">⚠️ Analyst downgrades: +{rev["upgrades"]}, -{rev["downgrades"]}</div>')
-        
-        # Red flags
-        if rf.get('signal') == 'clear':
-            lines.append(f'<div class="signal-line">🟢 No red flags in recent news</div>')
-        
-        # Short interest
-        if si is not None:
-            if si < 5:
-                lines.append(f'<div class="signal-line">🟢 Short interest: {si:.1f}% (low)</div>')
-            elif si < 15:
-                lines.append(f'<div class="signal-line">⚪ Short interest: {si:.1f}%</div>')
-            else:
-                lines.append(f'<div class="signal-line bad">⚠️ Short interest: {si:.1f}% (high)</div>')
-        
-        sentiment = r.get('sentiment', 'NEUTRAL')
-        sent_class = 'sent-bull' if sentiment == 'BULLISH' else 'sent-bear' if sentiment == 'BEARISH' else 'sent-neutral'
-        lines.append(f'<div class="sentiment-line {sent_class}">📊 Sentiment: {sentiment}</div>')
-        
-        return f'<div class="signals-box"><div class="signals-header">🟢 Auto-Signals</div>{"".join(lines)}</div>'
+    def get_tag(r, src):
+        if src == 'watch':
+            return ('WL', 'wl')
+        if r.get('tier') == 'QUALITY':
+            return ('QW', 'qw')
+        return ('PH', 'ph')
     
-    def build_pick_card(r, rank):
+    def get_default_fire_dt(date_str, timing):
+        """Get default fire datetime in Dubai time."""
+        try:
+            d = datetime.strptime(date_str, '%Y-%m-%d')
+            if timing == 'BMO':
+                prev = d - timedelta(days=1)
+                while prev.weekday() >= 5:
+                    prev -= timedelta(days=1)
+                return prev.replace(hour=21, minute=0)  # 9 PM Dubai
+            elif timing == 'AMC':
+                return d.replace(hour=18, minute=0)  # 6 PM Dubai
+            else:
+                return d.replace(hour=18, minute=0)
+        except:
+            return None
+    
+    def fire_time_str(r, default_fire_dt, adjusted_fire_dt, warning):
+        """Build fire time display string."""
+        if not default_fire_dt:
+            return "Fire timing TBD"
+        
+        if adjusted_fire_dt and adjusted_fire_dt != default_fire_dt:
+            return (f"⏰ {adjusted_fire_dt.strftime('%a %b %d %I:%M %p')} Dubai "
+                    f"(adjusted from {default_fire_dt.strftime('%I:%M %p')})")
+        
+        if r.get('earnings_timing') == 'BMO':
+            return f"⏰ Fire {default_fire_dt.strftime('%a %b %d')} 8-10 PM Dubai"
+        elif r.get('earnings_timing') == 'AMC':
+            return f"⏰ Fire {default_fire_dt.strftime('%a %b %d')} 5-7 PM Dubai"
+        else:
+            return f"⏰ Fire {default_fire_dt.strftime('%a %b %d')} TBD"
+    
+    def build_pick_row(r, src):
         pt = r.get('put_trade') or {}
         es = r.get('earnings_stats') or {}
         em = r.get('expected_move') or {}
-        is_q = r.get('tier') == 'QUALITY'
         
-        rank_class = '' if rank == 1 else 'r2' if rank == 2 else 'r3'
+        tag, tag_class = get_tag(r, src)
         timing = r.get('earnings_timing', 'TBD')
         timing_class = 'bmo' if timing == 'BMO' else 'amc' if timing == 'AMC' else 'tbd'
         
-        # Trade str
+        # Smart fire time
+        default_fire = get_default_fire_dt(r['next_earnings'], timing)
+        adjusted_fire, fire_warning = (default_fire, None)
+        if default_fire:
+            adjusted_fire, fire_warning = adjust_fire_window(default_fire, economic_events)
+        fire_str = fire_time_str(r, default_fire, adjusted_fire, fire_warning)
+        
+        # Trade
         trade_str = '—'
         if pt:
-            trade_str = f'<strong>${pt["strike"]:.0f}P</strong> {pt["expiry"][:7]} · {pt["delta"]*100:.1f}Δ · {pt["pct_otm"]:.0f}% OTM · <span class="credit">${pt["mid"]*100:.0f} credit</span>'
+            trade_str = (f'<strong>${pt["strike"]:.0f}P</strong> {pt["expiry"][:7]} · '
+                         f'{pt["delta"]*100:.1f}Δ · {pt["pct_otm"]:.0f}% OTM · '
+                         f'<span class="credit">${pt["mid"]*100:.0f} credit</span>')
         
         # Fundamentals
         mcap_c, mcap_v = fund_class(r['market_cap'], 'mcap')
@@ -899,57 +1147,81 @@ def render_html(results, scan_date, dashboard):
         de_c, de_v = fund_class(r.get('debt_to_equity'), 'de')
         peg_c, peg_v = fund_class(r.get('peg'), 'peg')
         
-        signals_html = build_signals_box(r)
-        fire_str = fire_time_label(r['next_earnings'], timing)
+        # Auto-signals (compact inline)
+        ins = r.get('insider_activity', {})
+        bb = r.get('buybacks', {})
+        eps = r.get('eps_streak', {})
+        rev = r.get('analyst_revisions', {})
+        rf = r.get('red_flags', {})
+        si = r.get('short_interest')
+        
+        sig_parts = []
+        if ins.get('signal') == 'bullish':
+            sig_parts.append(f'<span class="sig-good">🟢 Insider buys {ins["buys"]}</span>')
+        elif ins.get('signal') == 'bearish':
+            sig_parts.append(f'<span class="sig-bad">⚠️ Insider sells {ins["sells"]}</span>')
+        
+        if bb.get('signal') in ('strong', 'moderate') and bb.get('amount'):
+            sig_parts.append(f'<span class="sig-good">🟢 Buybacks ${bb["amount"]/1e9:.1f}B</span>')
+        
+        if eps.get('beats', 0) >= 3:
+            sig_parts.append(f'<span class="sig-good">🟢 EPS {eps["streak"]}</span>')
+        elif eps.get('misses', 0) >= 2:
+            sig_parts.append(f'<span class="sig-bad">⚠️ EPS misses {eps["streak"]}</span>')
+        
+        if rev.get('signal') == 'bullish':
+            sig_parts.append(f'<span class="sig-good">🟢 Upgrades +{rev["upgrades"]}</span>')
+        elif rev.get('signal') == 'bearish':
+            sig_parts.append(f'<span class="sig-bad">⚠️ Downgrades -{rev["downgrades"]}</span>')
+        
+        if rf.get('signal') == 'clear':
+            sig_parts.append('<span class="sig-good">🟢 No red flags</span>')
+        
+        signals_html = ' · '.join(sig_parts) if sig_parts else '⚪ Limited data'
+        
+        sentiment = r.get('sentiment', 'NEUTRAL')
+        sent_class = 'sent-bull' if sentiment == 'BULLISH' else 'sent-bear' if sentiment == 'BEARISH' else 'sent-neutral'
+        
+        warning_html = ''
+        if fire_warning:
+            warning_html = f'<div class="fire-warning">⚠️ {fire_warning}</div>'
         
         return f"""
-        <div class="pick {'quality' if is_q else 'hunt'}">
-            <div class="pick-row1">
-                <span class="rank {rank_class}">#{rank}</span>
-                <a href="https://unusualwhales.com/stock/{r['ticker']}/earnings" target="_blank" class="pick-ticker">{r['ticker']}</a>
-                <span class="pick-score">{r['score']}/10</span>
-                <span class="timing-pill {timing_class}">{timing}</span>
-                <span class="pick-rec">{r['recommendation'].replace('_',' ').title()}</span>
-            </div>
-            <div class="pick-company">{r['company']} · {r['sector']} · ${r['price']:.2f}</div>
-            
-            {signals_html}
-            
-            <div class="pick-trade">{trade_str}</div>
-            <div class="pick-meta">
-                <span>Edge {r['edge_ratio']}x</span>
-                <span>Exp {em.get('expected_pct',0):.1f}% / Act {es.get('avg_move',0):.1f}%</span>
-                <span>Red X {es.get('red_x_count','—')}/8</span>
-                <span class="fire-time">⏰ {fire_str}</span>
-            </div>
-            <div class="pick-fundamentals">
-                <span>MCap: <span class="{mcap_c}">{mcap_v}</span></span>
-                <span>P/E: <span class="{pe_c}">{pe_v}</span></span>
-                <span>D/E: <span class="{de_c}">{de_v}</span></span>
-                <span>PEG: <span class="{peg_c}">{peg_v}</span></span>
-            </div>
-            <div class="manual-check">
-                <strong>Manual checks:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · Unusual Whales
+        <div class="pick">
+            <div class="tag {tag_class}">{tag}</div>
+            <div class="pick-body">
+                <div class="pick-row1">
+                    <a href="https://unusualwhales.com/stock/{r['ticker']}/earnings" target="_blank" class="pick-ticker">{r['ticker']}</a>
+                    <span class="pick-score">{r['score']}/10</span>
+                    <span class="timing-pill {timing_class}">{timing}</span>
+                    <span class="pick-rec">{r['recommendation'].replace('_',' ').title()} · {r['company']} · ${r['price']:.2f}</span>
+                </div>
+                <div class="pick-trade">{trade_str}</div>
+                <div class="pick-meta">
+                    <span>Edge {r['edge_ratio']}x</span>
+                    <span>Exp {em.get('expected_pct',0):.1f}% / Act {es.get('avg_move',0):.1f}%</span>
+                    <span>Red X {es.get('red_x_count','—')}/8</span>
+                </div>
+                <div class="pick-fundamentals">
+                    <span>MCap <span class="{mcap_c}">{mcap_v}</span></span>
+                    <span>P/E <span class="{pe_c}">{pe_v}</span></span>
+                    <span>D/E <span class="{de_c}">{de_v}</span></span>
+                    <span>PEG <span class="{peg_c}">{peg_v}</span></span>
+                </div>
+                <div class="signals-inline">{signals_html}</div>
+                <div class="pick-bottom">
+                    <span class="sentiment {sent_class}">📊 {sentiment}</span>
+                    <span class="fire-time">{fire_str}</span>
+                </div>
+                {warning_html}
+                <div class="manual-check">
+                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                </div>
             </div>
         </div>
         """
     
-    def build_tier_section(picks, tier_label, emoji, tier_class):
-        if not picks:
-            return ''
-        cards = ''.join(build_pick_card(p, i+1) for i, p in enumerate(picks))
-        return f"""
-        <div class="tier-section">
-            <div class="tier-header">
-                <span class="tier-emoji">{emoji}</span>
-                <span class="tier-name">{tier_label}</span>
-                <span class="tier-count">{len(picks)}</span>
-            </div>
-            {cards}
-        </div>
-        """
-    
-    # Build day sections
+    # Day sections
     day_sections = ''
     for date in sorted_dates:
         try:
@@ -960,48 +1232,69 @@ def render_html(results, scan_date, dashboard):
             weekday = 'TBD'
             date_label = date
         
-        all_day = by_date[date]['BMO'] + by_date[date]['AMC'] + by_date[date]['TBD']
-        quality_picks = [r for r in all_day if r.get('tier') == 'QUALITY']
-        hunt_picks = [r for r in all_day if r.get('tier') == 'HUNT']
+        day_picks = by_date[date]
+        # Sort within day: QW first, then PH, then WL; by score desc
+        def sort_key(item):
+            r, src = item
+            tier_order = 0 if (src == 'top' and r.get('tier') == 'QUALITY') else 1 if src == 'top' else 2
+            return (tier_order, -r['score'])
+        day_picks.sort(key=sort_key)
         
-        q_section = build_tier_section(quality_picks, 'QUALITY WHEEL', '🏰', 'quality')
-        h_section = build_tier_section(hunt_picks, 'PREMIUM HUNT', '🔥', 'hunt')
+        qw_count = sum(1 for r, s in day_picks if s == 'top' and r.get('tier') == 'QUALITY')
+        ph_count = sum(1 for r, s in day_picks if s == 'top' and r.get('tier') == 'HUNT')
+        wl_count = sum(1 for r, s in day_picks if s == 'watch')
+        
+        cards = ''.join(build_pick_row(r, s) for r, s in day_picks)
         
         day_sections += f"""
         <div class="day-section">
-            <h2 class="day-title">📅 {weekday} — {date_label}</h2>
-            <div class="day-subtitle">{len(quality_picks)} quality · {len(hunt_picks)} hunt</div>
-            {q_section}
-            {h_section}
+            <div class="day-header">
+                <div class="day-title">📅 {weekday} — {date_label}</div>
+                <div class="day-summary">
+                    <span>{qw_count} QW</span><span>{ph_count} PH</span><span>{wl_count} WL</span>
+                </div>
+            </div>
+            {cards}
         </div>
         """
     
-    # Watch list
-    watch_html = ''
-    if watch:
-        watch_cards = ''.join(build_pick_card(p, i+1) for i, p in enumerate(watch[:10]))
-        watch_html = f"""
-        <div class="day-section">
-            <h2 class="day-title">👀 Watch List — partial fits</h2>
-            <div class="day-subtitle">Score 5.0-6.9 · Manual judgment call</div>
-            <div class="tier-section">{watch_cards}</div>
+    if not day_sections:
+        day_sections = '<div class="empty">No picks meet criteria today. Quiet markets or all setups failing filters.</div>'
+    
+    # Economic events strip
+    events_html = ''
+    if economic_events:
+        rows = []
+        for ev in economic_events[:8]:
+            ev_dubai = et_to_dubai(ev['date'])
+            impact_class = 'ev-high' if ev['impact'] == 'HIGH' else 'ev-med'
+            rows.append(f"""
+                <div class="ev-row {impact_class}">
+                    <span class="ev-icon">{ev['icon']}</span>
+                    <span class="ev-day">{ev_dubai.strftime('%a %b %d')}</span>
+                    <span class="ev-time">{ev_dubai.strftime('%I:%M %p')} Dubai</span>
+                    <span class="ev-name">{ev['name']}</span>
+                    <span class="ev-impact">{ev['impact']}</span>
+                </div>
+            """)
+        events_html = f"""
+        <div class="events-strip">
+            <div class="events-title">📅 THIS WEEK — Major Economic Events (Dubai time)</div>
+            <div class="events-list">{''.join(rows)}</div>
         </div>
         """
     
-    # Dashboard
+    # Dashboard tiles
     def dash_tile(label, key, fmt='{:.2f}', suffix=''):
         d = dashboard.get(key, {})
         val = d.get('value')
         chg = d.get('change')
         if val is None:
-            return f'<div class="dash-tile"><div class="dash-label">{label}</div><div class="dash-value">—</div></div>'
+            return f'<div class="dash-item"><span class="dash-label">{label}</span><span class="dash-value">—</span></div>'
         chg_class = 'up' if chg and chg > 0 else 'down' if chg and chg < 0 else ''
         chg_arrow = '↑' if chg and chg > 0 else '↓' if chg and chg < 0 else ''
-        chg_str = f'{chg_arrow} {abs(chg):.2f}%' if chg is not None else ''
-        return f'<div class="dash-tile"><div class="dash-label">{label}</div><div class="dash-value">{fmt.format(val)}{suffix}</div><div class="dash-change {chg_class}">{chg_str}</div></div>'
-    
-    regime = dashboard.get('regime', 'UNKNOWN')
-    regime_class = 'good' if 'CALM' in regime else 'warn' if 'NORMAL' in regime else 'bad'
+        chg_str = f'{chg_arrow}{abs(chg):.2f}%' if chg is not None else ''
+        return f'<div class="dash-item"><span class="dash-label">{label}</span><span class="dash-value">{fmt.format(val)}{suffix}</span><span class="dash-change {chg_class}">{chg_str}</span></div>'
     
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -1010,71 +1303,96 @@ def render_html(results, scan_date, dashboard):
 <title>Premium Hunter — {scan_date}</title>
 <style>
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-body {{ font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif; background: #0f172a; color: #e2e8f0; padding: 32px 24px; line-height: 1.5; }}
+body {{ font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif; background: #0f172a; color: #e2e8f0; padding: 28px 22px; line-height: 1.45; }}
 .container {{ max-width: 920px; margin: 0 auto; }}
-header {{ border-bottom: 1px solid #334155; padding-bottom: 20px; margin-bottom: 28px; }}
-h1 {{ font-size: 30px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em; }}
-.subtitle {{ color: #94a3b8; font-size: 14px; margin-top: 4px; }}
-.dashboard {{ background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 24px; }}
-.dashboard-title {{ font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }}
-.regime-badge {{ padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }}
-.regime-badge.good {{ background: #064e3b; color: #6ee7b7; }}
-.regime-badge.warn {{ background: #78350f; color: #fbbf24; }}
-.regime-badge.bad {{ background: #7f1d1d; color: #fca5a5; }}
-.dashboard-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }}
-.dash-tile {{ background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #1e293b; }}
-.dash-label {{ font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }}
-.dash-value {{ font-size: 18px; font-weight: 700; color: #f1f5f9; }}
-.dash-change {{ font-size: 11px; margin-top: 2px; font-weight: 500; }}
+header {{ border-bottom: 1px solid #334155; padding-bottom: 14px; margin-bottom: 16px; }}
+h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em; }}
+.subtitle {{ color: #94a3b8; font-size: 13px; margin-top: 4px; }}
+
+/* Caution Banner */
+.caution-banner {{ padding: 14px 18px; border-radius: 8px; margin-bottom: 18px; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }}
+.caution-banner.good {{ background: #064e3b; color: #6ee7b7; border: 1px solid #10b981; }}
+.caution-banner.warn {{ background: #78350f; color: #fbbf24; border: 1px solid #f59e0b; }}
+.caution-banner.bad {{ background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; animation: pulse 2s ease-in-out infinite; }}
+@keyframes pulse {{ 0%, 100% {{ opacity: 1; }} 50% {{ opacity: 0.85; }} }}
+.caution-mode {{ font-size: 16px; font-weight: 700; letter-spacing: 0.05em; }}
+.caution-rec {{ font-size: 12px; opacity: 0.9; font-weight: 500; }}
+
+/* Compact Dashboard */
+.dashboard {{ background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 12px; }}
+.dash-item {{ display: flex; align-items: baseline; gap: 5px; }}
+.dash-label {{ color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }}
+.dash-value {{ color: #f1f5f9; font-weight: 700; font-size: 13px; }}
+.dash-change {{ font-size: 10px; font-weight: 500; }}
 .up {{ color: #34d399; }}
 .down {{ color: #f87171; }}
-.day-section {{ margin-bottom: 36px; background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 22px; }}
-.day-title {{ font-size: 22px; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }}
-.day-subtitle {{ font-size: 12px; color: #94a3b8; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #334155; }}
-.tier-section {{ margin-bottom: 22px; }}
-.tier-section:last-child {{ margin-bottom: 0; }}
-.tier-header {{ display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }}
-.tier-emoji {{ font-size: 18px; }}
-.tier-name {{ font-size: 13px; font-weight: 600; color: #f1f5f9; letter-spacing: 0.02em; }}
-.tier-count {{ font-size: 11px; color: #94a3b8; background: #334155; padding: 2px 8px; border-radius: 10px; }}
-.pick {{ background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }}
-.pick.quality {{ border-left: 3px solid #3b82f6; }}
-.pick.hunt {{ border-left: 3px solid #f97316; }}
-.pick-row1 {{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }}
-.rank {{ color: #fff; font-weight: 700; font-size: 11px; padding: 3px 8px; border-radius: 4px; background: #16a34a; }}
-.rank.r2 {{ background: #3b82f6; }}
-.rank.r3 {{ background: #a78bfa; }}
-.pick-ticker {{ font-size: 18px; font-weight: 700; color: #60a5fa; text-decoration: none; }}
+
+/* Economic Events Strip */
+.events-strip {{ background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 16px; margin-bottom: 22px; }}
+.events-title {{ font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 600; }}
+.events-list {{ display: flex; flex-direction: column; gap: 4px; }}
+.ev-row {{ display: flex; align-items: center; gap: 10px; padding: 5px 8px; border-radius: 5px; font-size: 12px; }}
+.ev-row.ev-high {{ background: #450a0a; }}
+.ev-row.ev-med {{ background: #1e293b; }}
+.ev-icon {{ font-size: 12px; }}
+.ev-day {{ color: #94a3b8; font-weight: 500; min-width: 95px; font-size: 11px; }}
+.ev-time {{ color: #cbd5e1; min-width: 100px; font-size: 11px; font-weight: 500; }}
+.ev-name {{ color: #f1f5f9; flex: 1; font-size: 12px; }}
+.ev-impact {{ font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; }}
+.ev-high .ev-impact {{ background: #7f1d1d; color: #fecaca; }}
+.ev-med .ev-impact {{ background: #78350f; color: #fed7aa; }}
+
+/* Day Section */
+.day-section {{ margin-bottom: 18px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px 16px; }}
+.day-header {{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #334155; }}
+.day-title {{ font-size: 17px; font-weight: 700; color: #f1f5f9; }}
+.day-summary {{ font-size: 11px; color: #94a3b8; }}
+.day-summary span {{ margin-left: 8px; }}
+
+/* Pick Row — compact horizontal */
+.pick {{ background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; display: flex; gap: 12px; }}
+.pick:last-child {{ margin-bottom: 0; }}
+.tag {{ flex-shrink: 0; width: 36px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; padding: 6px 0; font-weight: 700; font-size: 12px; letter-spacing: 0.05em; }}
+.tag.qw {{ background: #1e3a8a; color: #dbeafe; border: 1px solid #3b82f6; }}
+.tag.ph {{ background: #7c2d12; color: #fed7aa; border: 1px solid #f97316; }}
+.tag.wl {{ background: #334155; color: #cbd5e1; border: 1px solid #64748b; }}
+.pick-body {{ flex: 1; min-width: 0; }}
+.pick-row1 {{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }}
+.pick-ticker {{ font-size: 16px; font-weight: 700; color: #60a5fa; text-decoration: none; }}
 .pick-ticker:hover {{ text-decoration: underline; }}
-.pick-score {{ font-size: 12px; color: #cbd5e1; background: #334155; padding: 2px 8px; border-radius: 4px; font-weight: 600; }}
-.timing-pill {{ font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.05em; }}
+.pick-score {{ font-size: 11px; color: #cbd5e1; background: #334155; padding: 2px 7px; border-radius: 4px; font-weight: 600; }}
+.timing-pill {{ font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; letter-spacing: 0.05em; }}
 .bmo {{ background: #fbbf24; color: #422006; }}
 .amc {{ background: #8b5cf6; color: #f3e8ff; }}
 .tbd {{ background: #475569; color: #cbd5e1; }}
-.pick-rec {{ font-size: 11px; color: #94a3b8; margin-left: auto; }}
-.pick-company {{ font-size: 12px; color: #94a3b8; margin-bottom: 12px; }}
-.signals-box {{ background: #022c22; border: 1px solid #064e3b; border-radius: 8px; padding: 10px 12px; margin: 10px 0; }}
-.signals-header {{ font-size: 10px; font-weight: 700; color: #34d399; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }}
-.signal-line {{ font-size: 12px; color: #d1fae5; margin: 3px 0; line-height: 1.5; }}
-.signal-line.bad {{ color: #fecaca; }}
-.sentiment-line {{ font-size: 13px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #064e3b; font-weight: 600; }}
-.sent-bull {{ color: #34d399; }}
-.sent-bear {{ color: #f87171; }}
-.sent-neutral {{ color: #fbbf24; }}
-.pick-trade {{ font-size: 14px; color: #e2e8f0; margin-bottom: 6px; background: #1e293b; padding: 10px 12px; border-radius: 6px; }}
+.pick-rec {{ font-size: 10px; color: #94a3b8; }}
+.pick-trade {{ font-size: 13px; color: #e2e8f0; background: #1e293b; padding: 6px 10px; border-radius: 5px; margin-bottom: 6px; }}
 .pick-trade strong {{ color: #f1f5f9; }}
 .credit {{ color: #34d399; font-weight: 600; }}
-.pick-meta {{ display: flex; gap: 12px; font-size: 11px; color: #94a3b8; flex-wrap: wrap; margin-bottom: 6px; }}
-.pick-fundamentals {{ display: flex; gap: 14px; font-size: 11px; color: #94a3b8; flex-wrap: wrap; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed #1e293b; }}
+.pick-meta {{ display: flex; gap: 12px; font-size: 10px; color: #94a3b8; flex-wrap: wrap; margin-bottom: 4px; }}
+.pick-fundamentals {{ display: flex; gap: 12px; font-size: 10px; color: #94a3b8; flex-wrap: wrap; margin-bottom: 6px; }}
 .fund-good {{ color: #34d399; }}
 .fund-warn {{ color: #fbbf24; }}
 .fund-bad {{ color: #f87171; }}
-.fire-time {{ color: #f97316; font-weight: 600; font-size: 11px; margin-left: auto; }}
-.manual-check {{ background: #1e1b3b; border: 1px dashed #6366f1; border-radius: 6px; padding: 8px 12px; margin-top: 8px; font-size: 11px; color: #c7d2fe; }}
-.manual-check strong {{ color: #a5b4fc; font-weight: 700; }}
-.legend {{ background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px; margin-top: 28px; font-size: 11px; color: #cbd5e1; line-height: 1.7; }}
-.legend strong {{ color: #f1f5f9; }}
+.signals-inline {{ font-size: 10px; color: #94a3b8; margin-bottom: 6px; line-height: 1.6; }}
+.sig-good {{ color: #34d399; }}
+.sig-bad {{ color: #f87171; }}
+.pick-bottom {{ display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }}
+.sentiment {{ font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; }}
+.sent-bull {{ background: #064e3b; color: #6ee7b7; }}
+.sent-neutral {{ background: #78350f; color: #fbbf24; }}
+.sent-bear {{ background: #7f1d1d; color: #fca5a5; }}
+.fire-time {{ color: #f97316; font-weight: 600; font-size: 10px; }}
+.fire-warning {{ background: #78350f; border: 1px solid #f59e0b; color: #fbbf24; padding: 4px 8px; border-radius: 4px; margin-top: 4px; font-size: 10px; font-weight: 600; }}
+.manual-check {{ font-size: 10px; color: #818cf8; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #1e293b; }}
+.manual-check strong {{ color: #a5b4fc; }}
 .empty {{ background: #1e293b; border: 1px dashed #475569; border-radius: 8px; padding: 32px; text-align: center; color: #94a3b8; font-size: 13px; }}
+.legend {{ background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px; margin-top: 18px; font-size: 11px; color: #cbd5e1; line-height: 1.6; }}
+.legend strong {{ color: #f1f5f9; }}
+.legend-tag {{ font-weight: 700; padding: 1px 6px; border-radius: 3px; font-size: 10px; }}
+.legend-tag.qw {{ background: #1e3a8a; color: #dbeafe; }}
+.legend-tag.ph {{ background: #7c2d12; color: #fed7aa; }}
+.legend-tag.wl {{ background: #334155; color: #cbd5e1; }}
 </style>
 </head>
 <body>
@@ -1084,32 +1402,31 @@ h1 {{ font-size: 30px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
         <div class="subtitle">{scan_date}</div>
     </header>
     
-    <div class="dashboard">
-        <div class="dashboard-title">
-            <span>📊 MARKET DASHBOARD</span>
-            <span class="regime-badge {regime_class}">{regime}</span>
-        </div>
-        <div class="dashboard-grid">
-            {dash_tile('VIX (Fear)', 'VIX', '{:.1f}')}
-            {dash_tile('SPY', 'SPY', '${:.2f}')}
-            {dash_tile('10Y Yield', '10Y', '{:.2f}', '%')}
-            {dash_tile('GBP/USD', 'GBPUSD', '{:.4f}')}
-            {dash_tile('Brent Crude', 'BRENT', '${:.2f}')}
-            {dash_tile('Gold', 'GOLD', '${:,.0f}')}
-        </div>
+    <div class="caution-banner {caution['class']}">
+        <span class="caution-mode">🚦 {caution['mode']}</span>
+        <span class="caution-rec">{caution['fire_recommendation']}</span>
     </div>
     
-    {day_sections if day_sections else '<div class="empty">No top picks today.</div>'}
-    {watch_html}
+    <div class="dashboard">
+        {dash_tile('VIX', 'VIX', '{:.1f}')}
+        {dash_tile('SPY', 'SPY', '${:.2f}')}
+        {dash_tile('10Y', '10Y', '{:.2f}', '%')}
+        {dash_tile('GBP/USD', 'GBPUSD', '{:.4f}')}
+        {dash_tile('Brent', 'BRENT', '${:.2f}')}
+        {dash_tile('Gold', 'GOLD', '${:,.0f}')}
+    </div>
+    
+    {events_html}
+    {day_sections}
     
     <div class="legend">
-        <strong>🏰 QUALITY WHEEL</strong> = stocks you'd happily own at the strike (META, MSFT, GOOGL, AMZN, V, MA, LLY...). 18-month LEAPs. Relaxed filters.<br>
-        <strong>🔥 PREMIUM HUNT</strong> = pure premium plays. 9-month LEAPs (Jan'27). Strict filters.<br><br>
-        <strong>BMO</strong> = Before Market Open. Fire previous US trading day Dubai 8-10 PM (Mon BMO = Fri eve fire).<br>
-        <strong>AMC</strong> = After Market Close. Fire same day Dubai 5-7 PM.<br><br>
-        <strong>Auto-signals</strong>: Insider activity · Buybacks · EPS streak · Analyst revisions · News red flags · Short interest. <strong>Sentiment proxy</strong> derived from these.<br>
-        <strong>🚨 RED ALERT triggers</strong>: SEC investigation · fraud · lawsuit · subpoena · CEO/CFO resignation · guidance cut.<br><br>
-        <strong>Manual checks (paid)</strong>: TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · Unusual Whales.
+        <strong>Tags:</strong>
+        <span class="legend-tag qw">QW</span> Quality Wheel · 
+        <span class="legend-tag ph">PH</span> Premium Hunt · 
+        <span class="legend-tag wl">WL</span> Watch List<br><br>
+        <strong>VIX bands:</strong> &lt;16 calm · 16-21 normal · 21-25 cautious · 25-30 stand down · &gt;30 crisis<br>
+        <strong>BMO</strong> = Before Open. <strong>AMC</strong> = After Close. Smart fire-time auto-shifts to avoid major economic events.<br>
+        <strong>Manual checks:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · Unusual Whales
     </div>
 </div>
 </body>
@@ -1121,13 +1438,22 @@ h1 {{ font-size: 30px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 # ==============================================================
 
 def main():
-    print(f"Premium Hunter v3 — scanning {len(WATCHLIST)} tickers...")
+    print(f"Premium Hunter v5 — scanning {len(WATCHLIST)} tickers...")
     print(f"Looking for earnings in next {MAX_DAYS_TO_EARNINGS} days\n")
     
     print("Pulling market dashboard...")
     dashboard = get_market_dashboard()
-    print(f"  VIX: {dashboard.get('VIX',{}).get('value','—')}")
-    print(f"  Regime: {dashboard.get('regime','—')}\n")
+    vix_val = dashboard.get('VIX', {}).get('value')
+    print(f"  VIX: {vix_val}")
+    
+    print("Generating economic calendar...")
+    economic_events = get_upcoming_economic_events(days_ahead=14)
+    print(f"  Found {len(economic_events)} upcoming events")
+    for ev in economic_events[:5]:
+        print(f"    {ev['date'].strftime('%a %b %d %H:%M ET')} - {ev['name']} [{ev['impact']}]")
+    
+    caution = get_caution_mode(vix_val)
+    print(f"\n  Mode: {caution['mode']} — {caution['fire_recommendation']}\n")
     
     results = []
     for ticker in WATCHLIST:
@@ -1138,7 +1464,7 @@ def main():
     print(f"\nFound {len(results)} stocks with upcoming earnings.")
     
     scan_date = datetime.now().strftime('%A, %B %d, %Y')
-    html = render_html(results, scan_date, dashboard)
+    html = render_html(results, scan_date, dashboard, economic_events, caution)
     
     out_path = Path('report.html')
     out_path.write_text(html)
