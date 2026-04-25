@@ -22,8 +22,21 @@ from pathlib import Path
 
 RISK_FREE = 0.045  # ~current 10Y treasury
 TARGET_DELTA = -0.07  # 5-8 delta sweet spot
-TARGET_DTE = 240  # ~8 months (Dec/Jan LEAPs)
 MAX_DAYS_TO_EARNINGS = 14
+
+
+def get_target_dte(ticker=None):
+    """Auto-pick next January LEAP — always 6-12 months out.
+    Rotates as months pass, no manual updates needed."""
+    today = datetime.now()
+    # If before July, target next January (6-12 months out)
+    # If July or later, target the January after next
+    if today.month <= 6:
+        target = datetime(today.year + 1, 1, 17)
+    else:
+        target = datetime(today.year + 2, 1, 17)
+    return (target - today).days
+
 
 # Watchlist - quality optionable stocks + Ash's known names
 WATCHLIST = [
@@ -209,9 +222,10 @@ def calc_expected_move(t, S):
         return None
 
 
-def find_target_put(t, S):
-    """Find ~5-7 delta put around target DTE."""
+def find_target_put(t, S, ticker_symbol):
+    """Find ~5-7 delta put around target DTE (auto-adjusted for ticker tier)."""
     try:
+        target_dte = get_target_dte(ticker_symbol)
         expiries = t.options
         if not expiries:
             return None
@@ -224,7 +238,7 @@ def find_target_put(t, S):
                 dte = (datetime.strptime(exp, '%Y-%m-%d') - today).days
                 if dte < 90:
                     continue
-                d = abs(dte - TARGET_DTE)
+                d = abs(dte - target_dte)
                 if d < best_diff:
                     best_diff = d
                     best_exp = exp
@@ -390,7 +404,7 @@ def process_ticker(ticker):
         
         d['earnings_stats'] = calc_avg_earnings_move(t, current_earnings_date=ne)
         d['expected_move'] = calc_expected_move(t, S)
-        d['put_trade'] = find_target_put(t, S)
+        d['put_trade'] = find_target_put(t, S, ticker)
         
         if d['earnings_stats'] and d['expected_move']:
             avg = d['earnings_stats']['avg_move']
@@ -441,9 +455,14 @@ def render_html(results, scan_date):
         
         trade_html = '—'
         if pt:
+            tier_badge = ''
+            if r['ticker'] in QUALITY_TIER:
+                tier_badge = '<span style="background:#1e40af; color:#dbeafe; font-size:9px; padding:2px 6px; border-radius:3px; margin-left:6px;">QUALITY</span>'
+            else:
+                tier_badge = '<span style="background:#7c2d12; color:#fdba74; font-size:9px; padding:2px 6px; border-radius:3px; margin-left:6px;">HUNT</span>'
             trade_html = f"""
                 <div class="trade">
-                    <div class="trade-strike">${pt['strike']:.0f}P</div>
+                    <div class="trade-strike">${pt['strike']:.0f}P{tier_badge}</div>
                     <div class="trade-meta">{pt['expiry'][:7]} · {pt['dte']}d · {pt['delta']*100:.1f}Δ</div>
                     <div class="trade-credit">${pt['mid']*100:.0f} mid · {pt['pct_otm']:.0f}% OTM</div>
                 </div>
