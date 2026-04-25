@@ -83,19 +83,49 @@ def get_next_earnings(t):
         return None
 
 
-def calc_avg_earnings_move(t, n=8):
-    """Average abs % move on past 8 earnings."""
+def calc_avg_earnings_move(t, current_earnings_date=None, n=8):
+    """Average abs % move on past earnings days. Multiple fallback methods."""
     try:
-        eh = t.earnings_dates
-        if eh is None or eh.empty:
+        earnings_dates = []
+        
+        # Method 1: yfinance earnings_dates (preferred but unreliable)
+        try:
+            eh = t.earnings_dates
+            if eh is not None and not eh.empty:
+                now = pd.Timestamp.now(tz='UTC') if eh.index.tz else pd.Timestamp.now()
+                past = eh[eh.index < now].head(n)
+                earnings_dates = [
+                    d.tz_localize(None) if d.tz else d for d in past.index
+                ]
+        except Exception:
+            pass
+        
+        # Method 2: Estimate by going back in 91-day quarterly increments
+        if len(earnings_dates) < 4 and current_earnings_date is not None:
+            cur = pd.Timestamp(current_earnings_date)
+            cur = cur.tz_localize(None) if cur.tz else cur
+            existing = set(d.date() for d in earnings_dates)
+            for i in range(1, n+1):
+                est = cur - pd.Timedelta(days=91 * i)
+                if est.date() not in existing:
+                    earnings_dates.append(est)
+        
+        # Method 3: Use quarterly_financials column dates as last resort
+        if len(earnings_dates) == 0:
+            try:
+                qf = t.quarterly_financials
+                if qf is not None and not qf.empty:
+                    for c in list(qf.columns)[:n]:
+                        # Earnings reported ~35 days after quarter end
+                        est = pd.Timestamp(c) + pd.Timedelta(days=35)
+                        earnings_dates.append(est)
+            except Exception:
+                pass
+        
+        if not earnings_dates:
             return None
         
-        now = pd.Timestamp.now(tz='UTC') if eh.index.tz else pd.Timestamp.now()
-        past = eh[eh.index < now].head(n)
-        
-        if len(past) == 0:
-            return None
-        
+        # Get price history (3 years to cover 8 quarters)
         hist = t.history(period='3y')
         if hist.empty:
             return None
@@ -103,18 +133,27 @@ def calc_avg_earnings_move(t, n=8):
         hist_idx = hist.index.tz_localize(None) if hist.index.tz else hist.index
         
         moves = []
-        for date in past.index:
+        for date in earnings_dates[:n]:
             try:
-                dn = date.tz_localize(None) if date.tz else date
-                before = hist_idx[hist_idx <= dn]
-                after = hist_idx[hist_idx > dn]
+                before = hist_idx[hist_idx <= date]
+                after = hist_idx[hist_idx > date]
                 if len(before) == 0 or len(after) == 0:
                     continue
                 bidx = before.max()
                 aidx = after.min()
-                pb = float(hist.loc[hist_idx == bidx, 'Close'].iloc[0])
-                pa = float(hist.loc[hist_idx == aidx, 'Close'].iloc[0])
+                # Skip if the gap between before/after is too large (>10 days = market closure)
+                if (aidx - bidx).days > 10:
+                    continue
+                pb_pos = hist_idx.get_loc(bidx)
+                pa_pos = hist_idx.get_loc(aidx)
+                pb = float(hist['Close'].iloc[pb_pos])
+                pa = float(hist['Close'].iloc[pa_pos])
+                if pb <= 0:
+                    continue
                 pct = abs((pa - pb) / pb * 100)
+                # Sanity check: reject moves >50% (likely data error)
+                if pct > 50:
+                    continue
                 moves.append(pct)
             except Exception:
                 continue
@@ -349,7 +388,7 @@ def process_ticker(ticker):
         
         print(f"  Processing {ticker}... earnings in {dte}d")
         
-        d['earnings_stats'] = calc_avg_earnings_move(t)
+        d['earnings_stats'] = calc_avg_earnings_move(t, current_earnings_date=ne)
         d['expected_move'] = calc_expected_move(t, S)
         d['put_trade'] = find_target_put(t, S)
         
