@@ -1978,9 +1978,13 @@ def build_indicators_panel(r):
     supports = r.get('support_floors') or []
     tariff_floor = r.get('tariff_floor')
     
+    # Build all rows with their numeric price for sorting
+    # Tuple: (label, dot_color, label_color, value_str, pct_str, numeric_price, is_current_price)
     ladder_rows = []
-    # Now (top - white)
-    ladder_rows.append(('price', '#f1f5f9', '#f1f5f9', f'${price:.0f} now', '', 0))
+    
+    # Current price (always at top)
+    ladder_rows.append(('price', '#f1f5f9', '#f1f5f9', f'${price:.0f} now', '', price, True))
+    
     # Supports
     for sup in supports[:2]:
         pct = (price - sup) / price * 100
@@ -1990,18 +1994,26 @@ def build_indicators_panel(r):
         else:
             color = '#f87171'
             label_color = '#fca5a5'
-        ladder_rows.append(('support', color, label_color, f'${sup:.0f}', f'−{pct:.0f}%', pct))
+        ladder_rows.append(('support', color, label_color, f'${sup:.0f}', f'−{pct:.0f}%', sup, False))
+    
     # Tariff floor
     if tariff_floor and tariff_floor < price:
         pct = (price - tariff_floor) / price * 100
-        ladder_rows.append(('⚠ tariff', '#a855f7', '#e9d5ff', f'${tariff_floor:.0f}', f'−{pct:.0f}%', pct))
+        ladder_rows.append(('⚠ tariff', '#a855f7', '#e9d5ff', f'${tariff_floor:.0f}', f'−{pct:.0f}%', tariff_floor, False))
+    
     # Strike
     if strike and strike < price:
         pct = (price - strike) / price * 100
-        ladder_rows.append(('strike', '#34d399', '#6ee7b7', f'${strike:.0f}', f'−{pct:.0f}% ✓', pct))
+        ladder_rows.append(('strike', '#34d399', '#6ee7b7', f'${strike:.0f}', f'−{pct:.0f}% ✓', strike, False))
+    
+    # Sort: keep current price at top, sort everything else by numeric price DESCENDING
+    current_row = [r_ for r_ in ladder_rows if r_[6]]
+    other_rows = [r_ for r_ in ladder_rows if not r_[6]]
+    other_rows.sort(key=lambda x: x[5], reverse=True)
+    ladder_rows = current_row + other_rows
     
     ladder_html = ''
-    for label, dot_color, label_color, value, pct_str, _ in ladder_rows:
+    for label, dot_color, label_color, value, pct_str, _, _ in ladder_rows:
         is_tariff = '⚠' in label
         bg = 'background: linear-gradient(90deg, rgba(168,85,247,0.08), transparent); border-top: 1px dashed #4c1d95; border-bottom: 1px dashed #4c1d95; padding: 4px 0;' if is_tariff else ''
         ladder_html += f'''<div class="ladder-row" style="{bg}">
@@ -2349,13 +2361,23 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
         
         sig_chips = []
         if bb.get('signal') in ('strong', 'moderate') and bb.get('amount'):
-            sig_chips.append(f'<span class="sig-chip"><span class="sig-dot">●</span>Buybacks ${bb["amount"]/1e9:.1f}B</span>')
+            sig_chips.append(f'<span class="sig-chip sig-buyback">💰 Buybacks ${bb["amount"]/1e9:.1f}B</span>')
         if rf.get('signal') == 'clear':
-            sig_chips.append(f'<span class="sig-chip"><span class="sig-dot">●</span>No red flags</span>')
+            sig_chips.append(f'<span class="sig-chip sig-noflag">✓ No red flags</span>')
         if ins.get('signal') == 'bullish' and ins.get('buys', 0) > 0:
-            sig_chips.append(f'<span class="sig-chip"><span class="sig-dot">●</span>Insider buys ({ins["buys"]})</span>')
+            sig_chips.append(f'<span class="sig-chip sig-insider-good">📈 Insider buys ({ins["buys"]})</span>')
+        elif ins.get('signal') == 'bearish' and ins.get('sells', 0) > 0:
+            sig_chips.append(f'<span class="sig-chip sig-insider-bad">⚠ Insider sells ({ins["sells"]})</span>')
         if eps.get('beats', 0) >= 3:
-            sig_chips.append(f'<span class="sig-chip"><span class="sig-dot">●</span>EPS streak {eps.get("streak", "")}</span>')
+            sig_chips.append(f'<span class="sig-chip sig-eps">📊 EPS streak {eps.get("streak", "")}</span>')
+        # Short interest pill
+        si = r.get('short_interest') or {}
+        if si.get('pct') is not None:
+            si_pct = si['pct']
+            if si_pct < 5:
+                sig_chips.append(f'<span class="sig-chip sig-short-good">📉 Short int {si_pct:.1f}% ✓</span>')
+            elif si_pct >= 15:
+                sig_chips.append(f'<span class="sig-chip sig-short-bad">⚠ Short int {si_pct:.1f}%</span>')
         
         signals_row_html = ''
         if sig_chips:
@@ -2372,24 +2394,40 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
         if bargain:
             bargain_inline_html = f'<span class="bargain-inline" title="Bargain price">🎯 ${bargain:.0f}</span>'
         
+        # Build fire date pill (DAY ONLY, no time — user prefers scannable)
+        fire_pill_html = ''
+        try:
+            if default_fire:
+                fire_date_str = default_fire.strftime('%a %d %b')  # "Mon 20 Apr"
+                fire_pill_html = f'<div class="fire-pill"><span class="fire-emoji">🔥</span>FIRE {fire_date_str}</div>'
+            else:
+                fire_pill_html = '<div class="fire-pill fire-pill-tbd">🔥 FIRE TBD</div>'
+        except Exception:
+            fire_pill_html = ''
+        
         # ============================================
         return f"""
         <div class="pick-v18">
             <div class="tag-side">{tag}</div>
             <div class="pick-body">
                 <div class="card-header">
-                    <div class="header-left">
+                    <div class="header-ticker-block">
                         <a href="https://unusualwhales.com/stock/{r['ticker']}/earnings" target="_blank" class="card-ticker">{r['ticker']}</a>
                         <span class="timing-icon {timing_class}" title="{timing}">{timing_icon}</span>
-                        <div class="score-block">
-                            <div class="score-label">My Score</div>
-                            <div class="score-badge score-mine">{my_score}</div>
+                    </div>
+                    <div class="header-middle">
+                        <div class="header-scores">
+                            <div class="score-block">
+                                <div class="score-label">My Score</div>
+                                <div class="score-badge score-mine">{my_score}</div>
+                            </div>
+                            <span class="score-sep">·</span>
+                            <div class="score-block">
+                                <div class="score-label score-claude-label">Claude</div>
+                                <div class="score-badge score-claude">{claude_score}</div>
+                            </div>
                         </div>
-                        <span class="score-sep">·</span>
-                        <div class="score-block">
-                            <div class="score-label score-claude-label">Claude</div>
-                            <div class="score-badge score-claude">{claude_score}</div>
-                        </div>
+                        {fire_pill_html}
                     </div>
                     <div class="header-right">
                         <div class="company-name">{r['company']}</div>
@@ -2415,6 +2453,8 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
                         <div class="claude-bullets">{bullets_html}</div>
                     </div>
                 </div>
+
+                {signals_row_html}
 
                 {primary_html}
                 {alt_html}
@@ -2448,8 +2488,6 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
                         {indicators_html}
                     </div>
                 </div>
-
-                {signals_row_html}
 
                 {warning_html}
 
@@ -2755,7 +2793,13 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .pick-v18 .tag-side {{ background: #c2410c; color: #fff7ed; writing-mode: vertical-rl; transform: rotate(180deg); padding: 14px 6px; font-size: 12px; font-weight: 500; letter-spacing: 0.15em; display: flex; align-items: center; justify-content: center; min-width: 22px; }}
 .pick-v18 .pick-body {{ flex: 1; padding: 16px 18px; min-width: 0; }}
 
-.card-header {{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 18px; flex-wrap: wrap; }}
+.card-header {{ display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; margin-bottom: 14px; }}
+.header-ticker-block {{ display: flex; align-items: center; gap: 10px; }}
+.header-middle {{ display: flex; flex-direction: column; align-items: center; gap: 10px; }}
+.header-scores {{ display: flex; justify-content: center; align-items: center; gap: 12px; }}
+.fire-pill {{ display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(90deg, #7c2d12, #9a3412); border: 1px solid #ea580c; color: #fed7aa; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; letter-spacing: -0.01em; box-shadow: 0 0 0 1px rgba(234,88,12,0.2); }}
+.fire-pill .fire-emoji {{ font-size: 14px; }}
+.fire-pill-tbd {{ background: #334155; border-color: #475569; color: #cbd5e1; }}
 .header-left {{ display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }}
 .card-ticker {{ color: #c4b5fd; font-size: 52px; font-weight: 700; text-decoration: none; letter-spacing: -0.03em; line-height: 1; }}
 .card-ticker:hover {{ color: #ddd6fe; }}
@@ -2786,10 +2830,10 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .claude-box .box-label {{ color: #c4b5fd; }}
 .box-label-row {{ display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }}
 .claude-c {{ width: 18px; height: 18px; background: #6d28d9; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f5f3ff; font-size: 9px; font-weight: 600; }}
-.claude-tag {{ font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 500; margin-left: auto; }}
-.tag-safe {{ background: #064e3b; color: #6ee7b7; }}
-.tag-watch {{ background: #1e3a8a; color: #93c5fd; }}
-.tag-skip {{ background: #7f1d1d; color: #fca5a5; }}
+.claude-tag {{ font-size: 14px; padding: 6px 14px; border-radius: 6px; font-weight: 800; letter-spacing: 0.06em; margin-left: auto; box-shadow: 0 0 0 1px rgba(255,255,255,.05); }}
+.tag-safe {{ background: #064e3b; color: #6ee7b7; border: 1px solid #10b981; }}
+.tag-watch {{ background: #1e3a8a; color: #93c5fd; border: 1px solid #3b82f6; }}
+.tag-skip {{ background: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; }}
 .box-text {{ color: #d1fae5; font-size: 12px; line-height: 1.55; margin: 8px 0 10px 0; }}
 .fund-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 8px; border-top: 1px dashed #166534; }}
 .fund-check {{ display: flex; align-items: center; gap: 5px; color: #d1fae5; font-size: 10px; }}
@@ -2899,9 +2943,15 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .mini-label {{ color: #64748b; font-size: 8px; text-transform: uppercase; font-weight: 500; margin-bottom: 2px; }}
 .mini-val {{ color: #cbd5e1; font-size: 12px; font-weight: 500; }}
 
-.signals-row {{ display: flex; align-items: center; gap: 16px; padding: 8px 14px; background: #0c1929; border: 1px dashed #1e293b; border-radius: 6px; font-size: 11px; color: #cbd5e1; margin-bottom: 10px; flex-wrap: wrap; }}
-.sig-chip {{ display: flex; align-items: center; gap: 5px; }}
-.sig-dot {{ color: #34d399; }}
+.signals-row {{ display: flex; align-items: center; gap: 8px; padding: 10px 0 14px; flex-wrap: wrap; }}
+.sig-chip {{ display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }}
+.sig-buyback {{ background: rgba(16,185,129,.18); color: #6ee7b7; border: 1px solid #10b981; }}
+.sig-noflag {{ background: rgba(16,185,129,.12); color: #6ee7b7; border: 1px solid #047857; }}
+.sig-eps {{ background: rgba(168,85,247,.18); color: #c4b5fd; border: 1px solid #7c3aed; }}
+.sig-insider-good {{ background: rgba(16,185,129,.15); color: #6ee7b7; border: 1px solid #10b981; }}
+.sig-insider-bad {{ background: rgba(245,158,11,.18); color: #fbbf24; border: 1px solid #d97706; }}
+.sig-short-good {{ background: rgba(96,165,250,.15); color: #93c5fd; border: 1px solid #2563eb; }}
+.sig-short-bad {{ background: rgba(239,68,68,.18); color: #fca5a5; border: 1px solid #dc2626; }}
 
 .card-footer {{ display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid #1e293b; flex-wrap: wrap; gap: 8px; }}
 .card-footer .fire-time {{ color: #fb923c; font-size: 13px; font-weight: 500; background: none; padding: 0; }}
@@ -2923,7 +2973,13 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .pick-v18 .pick-body {{ flex: 1; padding: 16px 18px; min-width: 0; }}
 
 /* Card header */
-.pick-v18 .card-header {{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 18px; flex-wrap: wrap; }}
+.pick-v18 .card-header {{ display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; margin-bottom: 14px; }}
+.pick-v18 .header-ticker-block {{ display: flex; align-items: center; gap: 10px; }}
+.pick-v18 .header-middle {{ display: flex; flex-direction: column; align-items: center; gap: 10px; }}
+.pick-v18 .header-scores {{ display: flex; justify-content: center; align-items: center; gap: 12px; }}
+.pick-v18 .fire-pill {{ display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(90deg, #7c2d12, #9a3412); border: 1px solid #ea580c; color: #fed7aa; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; letter-spacing: -0.01em; box-shadow: 0 0 0 1px rgba(234,88,12,0.2); }}
+.pick-v18 .fire-pill .fire-emoji {{ font-size: 14px; }}
+.pick-v18 .fire-pill-tbd {{ background: #334155; border-color: #475569; color: #cbd5e1; }}
 .pick-v18 .header-left {{ display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }}
 .pick-v18 .header-right {{ display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }}
 .pick-v18 .card-ticker {{ color: #c4b5fd; font-size: 52px; font-weight: 700; text-decoration: none; letter-spacing: -0.03em; line-height: 1; }}
@@ -2955,10 +3011,10 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .pick-v18 .box-label-row {{ display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }}
 .pick-v18 .box-text {{ color: #d1fae5; font-size: 12px; line-height: 1.55; margin: 8px 0 10px 0; }}
 .pick-v18 .claude-c {{ width: 18px; height: 18px; background: #6d28d9; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #f5f3ff; font-size: 9px; font-weight: 600; flex-shrink: 0; }}
-.pick-v18 .claude-tag {{ font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 500; margin-left: auto; }}
-.pick-v18 .tag-safe {{ background: #064e3b; color: #6ee7b7; }}
-.pick-v18 .tag-watch {{ background: #1e3a8a; color: #93c5fd; }}
-.pick-v18 .tag-skip {{ background: #7f1d1d; color: #fca5a5; }}
+.pick-v18 .claude-tag {{ font-size: 14px; padding: 6px 14px; border-radius: 6px; font-weight: 800; letter-spacing: 0.06em; margin-left: auto; box-shadow: 0 0 0 1px rgba(255,255,255,.05); }}
+.pick-v18 .tag-safe {{ background: #064e3b; color: #6ee7b7; border: 1px solid #10b981; }}
+.pick-v18 .tag-watch {{ background: #1e3a8a; color: #93c5fd; border: 1px solid #3b82f6; }}
+.pick-v18 .tag-skip {{ background: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; }}
 .pick-v18 .claude-bullets {{ display: flex; flex-direction: column; gap: 4px; }}
 .pick-v18 .claude-bullet {{ display: flex; gap: 7px; align-items: flex-start; font-size: 12px; line-height: 1.45; }}
 .pick-v18 .bullet-good > span:first-child {{ color: #34d399; }}
@@ -3065,9 +3121,15 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .pick-v18 .mini-val {{ color: #cbd5e1; font-size: 12px; font-weight: 500; }}
 
 /* Signals row */
-.pick-v18 .signals-row {{ display: flex; align-items: center; gap: 16px; padding: 8px 14px; background: #0c1929; border: 1px dashed #1e293b; border-radius: 6px; font-size: 11px; color: #cbd5e1; margin-bottom: 10px; flex-wrap: wrap; }}
-.pick-v18 .sig-chip {{ display: inline-flex; align-items: center; gap: 5px; }}
-.pick-v18 .sig-dot {{ color: #34d399; }}
+.pick-v18 .signals-row {{ display: flex; align-items: center; gap: 8px; padding: 10px 0 14px; flex-wrap: wrap; }}
+.pick-v18 .sig-chip {{ display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }}
+.pick-v18 .sig-buyback {{ background: rgba(16,185,129,.18); color: #6ee7b7; border: 1px solid #10b981; }}
+.pick-v18 .sig-noflag {{ background: rgba(16,185,129,.12); color: #6ee7b7; border: 1px solid #047857; }}
+.pick-v18 .sig-eps {{ background: rgba(168,85,247,.18); color: #c4b5fd; border: 1px solid #7c3aed; }}
+.pick-v18 .sig-insider-good {{ background: rgba(16,185,129,.15); color: #6ee7b7; border: 1px solid #10b981; }}
+.pick-v18 .sig-insider-bad {{ background: rgba(245,158,11,.18); color: #fbbf24; border: 1px solid #d97706; }}
+.pick-v18 .sig-short-good {{ background: rgba(96,165,250,.15); color: #93c5fd; border: 1px solid #2563eb; }}
+.pick-v18 .sig-short-bad {{ background: rgba(239,68,68,.18); color: #fca5a5; border: 1px solid #dc2626; }}
 
 /* Card footer */
 .pick-v18 .card-footer {{ display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid #1e293b; flex-wrap: wrap; gap: 8px; }}
