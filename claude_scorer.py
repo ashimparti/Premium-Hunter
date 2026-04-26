@@ -1,10 +1,12 @@
 """
 Claude Scorer — second-opinion BUSINESS INTEL for Premium Hunter picks.
 
-Ash already sees all the trade math (strike, premium, IV, earnings dates) on
-his card. Claude's job is to tell him about the COMPANY and what's going on
-with it right now — like a research-note brief from a friend who reads
-everything.
+Returns per pick:
+  - claude_blurb: 2-3 sentence plain-English description of what the company does
+  - claude_bullets: 3-4 business catalyst observations
+  - claude_score, claude_tag
+
+Replaces the yfinance company description box with Claude's version.
 """
 
 import os
@@ -23,66 +25,75 @@ SYSTEM_PROMPT = """You are giving Ash a quick research-note brief on a stock.
 Ash is a sophisticated options trader running the Wheel strategy from Dubai
 on a $2.4M portfolio.
 
-What Ash already knows (DON'T repeat it):
-- The strike, premium, IV, delta, DTE, OTM% — all visible on his card
-- When earnings are and when to pull the trigger on IV crush
-- He exits trades at 50% profit, never holds to expiry
-- He's flexible on delta — he may pick a different strike
+CRITICAL — WRITING LEVEL:
+Write at a 15-year-old reading level. If a smart 15-year-old wouldn't
+understand a phrase, REWRITE IT. No jargon. No finance-speak. Plain English.
 
-What Ash WANTS from you:
-1. What does this company actually do? (one sentence, plain English, like
-   you're explaining to a smart friend — NOT yfinance boilerplate)
-2. What's happening with the company RIGHT NOW? Recent deals, AI capex,
-   product launches, FDA stuff, lawsuits, M&A, leadership changes,
-   regulatory pressure, China exposure
-3. Real upcoming catalysts (not just earnings — product launches, court
-   cases, capacity expansion, capital returns)
-4. Risks an outsider might miss — competitor threats, cycle position,
-   end-of-life products, structural headwinds
-5. Use what you know — your training goes through Jan 2026, you know
-   Anthropic's deals, GLP-1 race dynamics, AI capex debate, NBIS spinoff,
-   ad market shifts, semi cycle, etc.
+BANNED phrases (translate them to plain English):
+- "multi-year compression" → "stock been falling for years"
+- "valuation re-rating" → "investors paying more for the stock"
+- "cash flow basis" → just say "cash" or "free cash"
+- "pricing power eroding" → "harder to keep prices high"
+- "binary risk" → "could go either way fast"
+- "secular tailwind" → "long-term boost"
+- "dealer destocking" → "shops working through old inventory"
+- "capex cycle" → "company spending big on new stuff"
+- "TAM expansion" → "bigger market to sell to"
+- "annualized return" → "per year"
+- "backlog" → "orders piling up"
+- "guidance" → "what the company tells investors to expect"
+- "GLP-1 LOE overhang" → just explain the patent issue plainly
+- "moat" → "competitive edge" or describe what makes it hard to compete
+- ALL Greek letters, "delta", "DTE", "OTM"
+- "fortress balance sheet" → "tons of cash, low debt"
+- "compounder" → "keeps growing year after year"
 
-DO NOT WRITE:
-- Premium math ("$698 for 2 years isn't worth it")
-- Trade structure ("strike 41% below spot, huge cushion")
-- Earnings timing ("earnings in 2 days, wait for IV crush")
-- Generic boilerplate ("quality compounder", "fortress balance sheet",
-  "strong buybacks support downside")
-- Anything Ash can already see on his card
+What Ash already knows (DON'T repeat):
+- All the trade math (strike, premium, IV, dates) — visible on his card
+- He exits at 50% profit, never holds to expiry
+- He's flexible on strike
+
+What Ash WANTS:
+
+1. A 2-3 sentence "what this company actually does" — explain it like to a
+   smart kid. NOT yfinance boilerplate. Mention real products, segments,
+   what makes them money.
+
+2. 3-4 catalyst bullets:
+   - What's happening NOW (deals, products, lawsuits, leadership)
+   - Real upcoming catalysts (launches, court cases, expansion)
+   - Risks the average person might miss
+   - All in plain language a 15-year-old would understand
 
 Return ONLY valid JSON, no preamble:
 {
   "score": <float 0-10>,
   "tag": "SAFE BET" | "WATCH" | "SKIP",
+  "blurb": "<2-3 sentences, plain English>",
   "bullets": [
-    {"tone": "good" | "warn" | "bad", "text": "<max 30 words>"}
+    {"tone": "good" | "warn" | "bad", "text": "<plain English, max 30 words>"}
   ]
 }
 
-Aim for 3-4 bullets. ALWAYS lead with one bullet that is a plain-English
-"what this company actually does" — written like a smart friend, not a 10-K.
+Score: SAFE BET >= 8, WATCH 6-7.9, SKIP < 6
+Score reflects "is now a good time to deal with this company"
 
-The score reflects whether NOW is a good time to be engaging with this
-company (catalysts vs risks vs timing), not whether the company is high
-quality in the abstract.
+GOOD blurb examples:
+- AMZN: "Three businesses in one: AWS (rents out cloud computers, where most of the profit comes from), online shopping (the Amazon site you know), and a fast-growing ads business now around 10% of sales. AWS just sped back up to 19% growth thanks to AI demand."
+- LLY: "Drug company whose biggest moneymakers are Mounjaro and Zepbound — weight-loss and diabetes shots that have exploded in popularity. They also make cancer and immune-system drugs, but the next 2 years are mostly about defending those weight-loss drugs from copycats."
+- DPZ: "World's biggest pizza chain — over 21,000 stores, most owned by local franchise owners. Tech-heavy: 75% of US orders come through their app. Now growing fast overseas and using AI to cut labor costs."
 
-Tag: SAFE BET >= 8 (clear positive catalyst, manageable risks)
-     WATCH 6-7.9 (mixed picture, real risks alongside positives)
-     SKIP < 6 (real business risks or bad timing)
+GOOD bullet examples (plain English):
+- "AWS just sped back up to 19% growth — the deal with Anthropic locks in big cloud orders for years"
+- "Novo Nordisk's new shot is about to launch and Merck has a pill version coming — Lilly's lead is shrinking"
+- "Stock has shot up 174% this year, looks overheated — buying now after that run is risky"
+- "Pizza dealers in the US slowing down as people choose McDonald's $5 meals — but UK and India growing strong"
 
-GOOD examples (what to write):
-- "Amazon's three engines: AWS cloud (the profit machine), e-commerce (massive logistics moat), and a fast-growing ads business now ~10% of revenue."
-- "AWS growth re-accelerated to 19% on AI demand — the Anthropic capex deal locks multi-year cloud demand. Ads quietly becoming a $50B+ business."
-- "Eli Lilly is the GLP-1 leader (Mounjaro, Zepbound) but Novo's CagriSema data and Merck's orforglipron are about to hit. Pricing power eroding."
-- "Caterpillar dealer inventories finally normalising after destocking; mining capex cycle turning. Backlog still strong, 2026 setup constructive."
-- "Visa faces real disruption: stablecoins on Ethereum + Solana scaling fast, ECB digital euro sidelining card networks. Moat narrowing."
-
-BAD examples (do NOT write):
-- "Strike $155 sits 41% below spot — large safety buffer"
-- "Premium of $698 over 2 years works out to 2% per year"
-- "Earnings in 2 days, wait for IV crush"
-- "Amazon is a quality compounder with massive scale advantages"
+BAD bullet examples (too jargon-y, do NOT write):
+- "Stock down 23% YTD — finally cheap on cash flow basis after multi-year compression"
+- "GLP-1 LOE overhang creating valuation overhang"
+- "Dealer destocking cycle complete, capex turning constructive"
+- "AWS reaccelerated; secular AI tailwind durable"
 """
 
 
@@ -120,9 +131,9 @@ Business signals:
 - Short interest: {pick.get('short_interest')}
 - Red flags: {pick.get('red_flags')}
 
-Now write the brief. Lead with what {pick.get('ticker')} actually does in
-plain English. Then tell me what's going on with the company right now and
-what could move it. Use what you know — don't just regurgitate the data above."""
+Now write the brief.
+- "blurb": 2-3 sentences explaining what {pick.get('ticker')} actually does (NO yfinance boilerplate)
+- "bullets": 3-4 catalysts — recent deals, business shifts, real risks. Use what you know."""
 
 
 def _fallback_result(pick):
@@ -130,6 +141,7 @@ def _fallback_result(pick):
     return {
         'claude_score': algo,
         'claude_tag': 'SAFE BET' if algo >= 8 else 'WATCH' if algo >= 6 else 'SKIP',
+        'claude_blurb': '',
         'claude_bullets': [('warn', 'Claude API unavailable - using algo score only')],
     }
 
@@ -141,7 +153,7 @@ def _score_one(client, pick, retries=2):
         try:
             resp = client.messages.create(
                 model=MODEL,
-                max_tokens=900,
+                max_tokens=1000,
                 system=SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": user_prompt}],
             )
@@ -152,6 +164,7 @@ def _score_one(client, pick, retries=2):
             return {
                 'claude_score': float(data.get('score', pick.get('score', 0))),
                 'claude_tag': data.get('tag', 'WATCH'),
+                'claude_blurb': data.get('blurb', '').strip(),
                 'claude_bullets': [
                     (b.get('tone', 'warn'), b.get('text', ''))
                     for b in data.get('bullets', [])
@@ -183,7 +196,7 @@ def score_picks(picks):
         return picks
 
     client = Anthropic(api_key=api_key)
-    print(f"\nScoring {len(picks)} picks with Claude Opus 4.7 (research mode)...", flush=True)
+    print(f"\nScoring {len(picks)} picks with Claude Opus 4.7 (research mode + blurb)...", flush=True)
 
     for i, pick in enumerate(picks, 1):
         result = _score_one(client, pick)
