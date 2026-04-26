@@ -2217,11 +2217,11 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
         red_x = es.get('red_x_count', 0)
         if r.get('claude_bullets'):
             # Real Claude API response
-            claude_tag = r.get('claude_tag', 'WATCH')
+            claude_tag = r.get('claude_tag', 'BUY')
             claude_bullets = list(r['claude_bullets'])
         else:
             # Fallback: algo-derived placeholders
-            claude_tag = 'SAFE BET' if my_score >= 8 else 'WATCH' if my_score >= 6 else 'SKIP'
+            claude_tag = 'STRONG BUY' if my_score >= 8 else 'BUY' if my_score >= 6 else 'SKIP'
             claude_bullets = []
             if edge >= 4:
                 claude_bullets.append(('good', f'Edge {edge}x — premium way overpriced vs actual moves'))
@@ -2247,7 +2247,7 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
             
             claude_bullets = claude_bullets[:4]
         
-        claude_tag_class = 'tag-safe' if claude_tag == 'SAFE BET' else 'tag-watch' if claude_tag == 'WATCH' else 'tag-skip'
+        claude_tag_class = 'tag-safe' if claude_tag == 'STRONG BUY' else 'tag-watch' if claude_tag == 'BUY' else 'tag-skip'
         bullets_html = ''.join(
             f'<div class="claude-bullet bullet-{tone}"><span>●</span><span>{text}</span></div>'
             for tone, text in claude_bullets
@@ -2258,24 +2258,36 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
         # ============================================
         if pt:
             primary_dte = pt.get('dte', 0)
+            primary_qty = r.get('suggested_size', 1)
             primary_html = f'''<div class="put-row">
-                <span class="put-tag">PRIMARY · {primary_dte}d</span>
+                <div class="put-dte-large">{primary_dte}<span class="dte-unit">DTE</span></div>
                 <span class="put-strike">${pt["strike"]:.0f}P</span>
-                <span class="put-meta">{pt["expiry"][:7]} · {pt["delta"]*100:.1f}Δ · {pt["pct_otm"]:.0f}% OTM</span>
-                <span class="put-qty">×{r.get('suggested_size', 1)}</span>
-                <span class="put-credit">${pt["mid"]*100:.0f}</span>
+                <div class="put-meta-row">
+                    <span>{pt["expiry"][:7]}</span>
+                    <span>·</span>
+                    <span>{pt["delta"]*100:.1f}Δ</span>
+                    <span>·</span>
+                    <span>{pt["pct_otm"]:.0f}% OTM</span>
+                    <span class="otm-mult">×{primary_qty}</span>
+                </div>
             </div>'''
         else:
             primary_html = '<div class="put-row put-row-empty">No primary put available</div>'
         
         alt_html = ''
         if alt:
+            alt_dte = alt.get("dte", 35)
             alt_html = f'''<div class="put-row">
-                <span class="put-tag">ALT · {alt.get("dte", 35)}d</span>
+                <div class="put-dte-large alt">{alt_dte}<span class="dte-unit">DTE</span></div>
                 <span class="put-strike">${alt["strike"]:.0f}P</span>
-                <span class="put-meta">{alt["expiry"][:10]} · {alt["delta"]*100:.0f}Δ · {alt["otm_pct"]:.0f}% OTM</span>
-                <span class="put-qty">×3</span>
-                <span class="put-credit">${alt["mid"]*100:.0f}</span>
+                <div class="put-meta-row">
+                    <span>{alt["expiry"][:10]}</span>
+                    <span>·</span>
+                    <span>{alt["delta"]*100:.0f}Δ</span>
+                    <span>·</span>
+                    <span>{alt["otm_pct"]:.0f}% OTM</span>
+                    <span class="otm-mult">×3</span>
+                </div>
             </div>'''
         
         # ============================================
@@ -2301,9 +2313,14 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
         # NEWS BOX
         # ============================================
         news_items = r.get('news_items') or []
+        claude_sents = r.get('claude_news_sentiments') or []
         news_html = ''
-        for item in news_items:
-            sent = item.get('sentiment', 'neutral')
+        for i, item in enumerate(news_items):
+            # Prefer Claude's classification if available, else fall back to keyword logic
+            if i < len(claude_sents):
+                sent = claude_sents[i]
+            else:
+                sent = item.get('sentiment', 'neutral')
             icon = '▲' if sent == 'positive' else '▼' if sent == 'negative' else '●'
             icon_class = 'news-pos' if sent == 'positive' else 'news-neg' if sent == 'negative' else 'news-neu'
             url = item.get('url', '')
@@ -2350,6 +2367,11 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
         
         # ============================================
         # FINAL CARD HTML
+        # Bargain inline element for header-right (next to price)
+        bargain_inline_html = ''
+        if bargain:
+            bargain_inline_html = f'<span class="bargain-inline" title="Bargain price">🎯 ${bargain:.0f}</span>'
+        
         # ============================================
         return f"""
         <div class="pick-v18">
@@ -2368,11 +2390,13 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
                             <div class="score-label score-claude-label">Claude</div>
                             <div class="score-badge score-claude">{claude_score}</div>
                         </div>
-                        {('<span class="score-sep">·</span>' + bargain_html) if bargain_html else ''}
                     </div>
                     <div class="header-right">
                         <div class="company-name">{r['company']}</div>
-                        <div class="company-price">${r['price']:.2f}</div>
+                        <div class="price-row">
+                            <span class="company-price">${r['price']:.2f}</span>
+                            {bargain_inline_html}
+                        </div>
                     </div>
                 </div>
 
@@ -2735,9 +2759,9 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .header-left {{ display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }}
 .card-ticker {{ color: #c4b5fd; font-size: 52px; font-weight: 700; text-decoration: none; letter-spacing: -0.03em; line-height: 1; }}
 .card-ticker:hover {{ color: #ddd6fe; }}
-.timing-icon {{ background: #fbbf24; color: #422006; padding: 6px 10px; border-radius: 50%; font-size: 14px; }}
-.timing-icon.amc {{ background: #1e3a8a; color: #dbeafe; }}
-.timing-icon.tbd {{ background: #475569; color: #cbd5e1; }}
+.timing-icon {{ font-size: 18px; opacity: 0.85; line-height: 1; }}
+.timing-icon.amc {{ }}
+.timing-icon.tbd {{ }}
 
 .score-block {{ display: flex; flex-direction: column; align-items: center; gap: 3px; }}
 .score-label {{ color: #64748b; font-size: 9px; text-transform: uppercase; font-weight: 500; letter-spacing: 0.04em; }}
@@ -2746,12 +2770,14 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .score-badge {{ font-size: 19px; font-weight: 500; padding: 5px 14px; border-radius: 6px; line-height: 1; }}
 .score-mine {{ background: #1e293b; border: 1px solid #475569; color: #f1f5f9; }}
 .score-claude {{ background: #2e1065; border: 1px solid #7c3aed; color: #ddd6fe; }}
-.bargain-badge {{ background: #500724; border: 1px solid #be185d; color: #fce7f3; font-size: 17px; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px; }}
+.bargain-badge {{ background: #500724; border: 1px solid #be185d; color: #fce7f3; font-size: 19px; padding: 5px 14px; display: inline-flex; align-items: center; gap: 5px; }}
 .score-sep {{ color: #475569; font-size: 16px; }}
 
 .header-right {{ display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }}
 .company-name {{ color: #f1f5f9; font-size: 16px; font-weight: 500; }}
 .company-price {{ color: #cbd5e1; font-size: 15px; font-weight: 500; }}
+.price-row {{ display: flex; align-items: baseline; gap: 10px; }}
+.bargain-inline {{ color: #fda4af; font-size: 13px; font-weight: 600; background: rgba(190,24,93,.15); border: 1px solid #be185d; padding: 3px 8px; border-radius: 5px; line-height: 1; }}
 
 .company-claude-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }}
 .company-box {{ background: #0c2d1a; border: 1px solid #166534; border-radius: 8px; padding: 12px 14px; }}
@@ -2762,7 +2788,7 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .claude-c {{ width: 18px; height: 18px; background: #6d28d9; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f5f3ff; font-size: 9px; font-weight: 600; }}
 .claude-tag {{ font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 500; margin-left: auto; }}
 .tag-safe {{ background: #064e3b; color: #6ee7b7; }}
-.tag-watch {{ background: #422006; color: #fde68a; }}
+.tag-watch {{ background: #1e3a8a; color: #93c5fd; }}
 .tag-skip {{ background: #7f1d1d; color: #fca5a5; }}
 .box-text {{ color: #d1fae5; font-size: 12px; line-height: 1.55; margin: 8px 0 10px 0; }}
 .fund-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 8px; border-top: 1px dashed #166534; }}
@@ -2781,9 +2807,15 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .bullet-warn > span:first-child {{ color: #fbbf24; }} .bullet-warn > span:last-child {{ color: #fde68a; }}
 .bullet-bad > span:first-child {{ color: #f87171; }} .bullet-bad > span:last-child {{ color: #fecaca; }}
 
-.put-row {{ display: grid; grid-template-columns: 110px 80px 1fr 50px 70px; gap: 10px; align-items: center; background: #0f172a; border: 1px solid #4c1d95; border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; }}
+.put-row {{ display: grid; grid-template-columns: 110px 90px 1fr; gap: 14px; align-items: center; background: #0f172a; border: 1px solid #4c1d95; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }}
 .put-row-empty {{ display: block; color: #94a3b8; font-size: 12px; text-align: center; padding: 12px; }}
-.put-tag {{ background: #2e1065; color: #ddd6fe; font-size: 10px; font-weight: 500; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.06em; text-align: center; }}
+.put-dte-large {{ font-size: 22px; font-weight: 800; color: #c4b5fd; line-height: 1; text-align: center; background: #2e1065; border: 1px solid #7c3aed; border-radius: 8px; padding: 10px 8px; letter-spacing: -0.02em; }}
+.put-dte-large.alt {{ color: #93c5fd; background: #1e3a8a; border-color: #3b82f6; }}
+.put-dte-large .dte-unit {{ display: block; font-size: 9px; font-weight: 600; color: #a78bfa; margin-top: 2px; letter-spacing: 0.05em; }}
+.put-dte-large.alt .dte-unit {{ color: #93c5fd; }}
+.put-strike {{ font-size: 20px; font-weight: 700; color: #93c5fd; text-align: center; }}
+.put-meta-row {{ display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 12px; flex-wrap: wrap; }}
+.put-meta-row .otm-mult {{ color: #fbbf24; font-weight: 700; font-size: 14px; margin-left: auto; }}
 .put-strike {{ color: #60a5fa; font-size: 22px; font-weight: 500; letter-spacing: -0.015em; }}
 .put-meta {{ color: #cbd5e1; font-size: 13px; font-weight: 400; }}
 .put-qty {{ color: #fbbf24; font-size: 15px; font-weight: 500; text-align: center; }}
@@ -2896,9 +2928,9 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .pick-v18 .header-right {{ display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }}
 .pick-v18 .card-ticker {{ color: #c4b5fd; font-size: 52px; font-weight: 700; text-decoration: none; letter-spacing: -0.03em; line-height: 1; }}
 .pick-v18 .card-ticker:hover {{ text-decoration: underline; }}
-.pick-v18 .timing-icon {{ background: #fbbf24; color: #422006; padding: 4px 8px; border-radius: 50%; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; }}
-.pick-v18 .timing-icon.amc {{ background: #6d28d9; color: #ddd6fe; }}
-.pick-v18 .timing-icon.tbd {{ background: #475569; color: #cbd5e1; }}
+.pick-v18 .timing-icon {{ font-size: 18px; opacity: 0.85; line-height: 1; }}
+.pick-v18 .timing-icon.amc {{ }}
+.pick-v18 .timing-icon.tbd {{ }}
 .pick-v18 .score-block {{ display: flex; flex-direction: column; align-items: center; gap: 3px; }}
 .pick-v18 .score-label {{ font-size: 9px; text-transform: uppercase; font-weight: 500; letter-spacing: 0.04em; color: #64748b; }}
 .pick-v18 .score-claude-label {{ color: #c4b5fd; }}
@@ -2906,10 +2938,12 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .pick-v18 .score-badge {{ font-size: 19px; font-weight: 500; padding: 5px 14px; border-radius: 6px; line-height: 1; display: inline-flex; align-items: center; }}
 .pick-v18 .score-mine {{ background: #1e293b; border: 1px solid #475569; color: #f1f5f9; }}
 .pick-v18 .score-claude {{ background: #2e1065; border: 1px solid #7c3aed; color: #ddd6fe; }}
-.pick-v18 .bargain-badge {{ background: #500724; border: 1px solid #be185d; color: #fce7f3; font-size: 17px; padding: 5px 12px; gap: 5px; }}
+.pick-v18 .bargain-badge {{ background: #500724; border: 1px solid #be185d; color: #fce7f3; font-size: 19px; padding: 5px 14px; gap: 5px; }}
 .pick-v18 .score-sep {{ color: #475569; font-size: 16px; }}
 .pick-v18 .company-name {{ color: #f1f5f9; font-size: 16px; font-weight: 500; }}
-.pick-v18 .company-price {{ color: #cbd5e1; font-size: 15px; font-weight: 500; }}
+.pick-v18 .company-price {{ color: #f1f5f9; font-size: 22px; font-weight: 700; line-height: 1; }}
+.pick-v18 .price-row {{ display: flex; align-items: baseline; gap: 10px; }}
+.pick-v18 .bargain-inline {{ color: #fda4af; font-size: 14px; font-weight: 600; background: rgba(190,24,93,.15); border: 1px solid #be185d; padding: 3px 8px; border-radius: 5px; line-height: 1; }}
 
 /* Company + Claude row */
 .pick-v18 .company-claude-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }}
@@ -2923,7 +2957,7 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .pick-v18 .claude-c {{ width: 18px; height: 18px; background: #6d28d9; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #f5f3ff; font-size: 9px; font-weight: 600; flex-shrink: 0; }}
 .pick-v18 .claude-tag {{ font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 500; margin-left: auto; }}
 .pick-v18 .tag-safe {{ background: #064e3b; color: #6ee7b7; }}
-.pick-v18 .tag-watch {{ background: #78350f; color: #fbbf24; }}
+.pick-v18 .tag-watch {{ background: #1e3a8a; color: #93c5fd; }}
 .pick-v18 .tag-skip {{ background: #7f1d1d; color: #fca5a5; }}
 .pick-v18 .claude-bullets {{ display: flex; flex-direction: column; gap: 4px; }}
 .pick-v18 .claude-bullet {{ display: flex; gap: 7px; align-items: flex-start; font-size: 12px; line-height: 1.45; }}
@@ -2945,9 +2979,15 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .pick-v18 .fund-na {{ color: #94a3b8; }}
 
 /* Put rows — INLINE GRID */
-.pick-v18 .put-row {{ display: grid; grid-template-columns: 110px 80px 1fr 50px 70px; gap: 10px; align-items: center; background: #0f172a; border: 1px solid #4c1d95; border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; }}
+.pick-v18 .put-row {{ display: grid; grid-template-columns: 110px 90px 1fr; gap: 14px; align-items: center; background: #0f172a; border: 1px solid #4c1d95; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }}
 .pick-v18 .put-row-empty {{ display: block; text-align: center; color: #64748b; font-size: 12px; padding: 10px; }}
-.pick-v18 .put-tag {{ background: #2e1065; color: #ddd6fe; font-size: 10px; font-weight: 500; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.06em; text-align: center; line-height: 1.2; }}
+.pick-v18 .put-dte-large {{ font-size: 22px; font-weight: 800; color: #c4b5fd; line-height: 1; text-align: center; background: #2e1065; border: 1px solid #7c3aed; border-radius: 8px; padding: 10px 8px; letter-spacing: -0.02em; }}
+.pick-v18 .put-dte-large.alt {{ color: #93c5fd; background: #1e3a8a; border-color: #3b82f6; }}
+.pick-v18 .put-dte-large .dte-unit {{ display: block; font-size: 9px; font-weight: 600; color: #a78bfa; margin-top: 2px; letter-spacing: 0.05em; }}
+.pick-v18 .put-dte-large.alt .dte-unit {{ color: #93c5fd; }}
+.pick-v18 .put-strike {{ font-size: 20px; font-weight: 700; color: #93c5fd; text-align: center; }}
+.pick-v18 .put-meta-row {{ display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 12px; flex-wrap: wrap; }}
+.pick-v18 .put-meta-row .otm-mult {{ color: #fbbf24; font-weight: 700; font-size: 14px; margin-left: auto; }}
 .pick-v18 .put-strike {{ color: #60a5fa; font-size: 22px; font-weight: 500; letter-spacing: -0.015em; }}
 .pick-v18 .put-meta {{ color: #cbd5e1; font-size: 13px; font-weight: 400; }}
 .pick-v18 .put-qty {{ color: #fbbf24; font-size: 15px; font-weight: 500; text-align: center; }}
