@@ -62,7 +62,6 @@ def get_target_dte(ticker=None):
 
 
 WATCHLIST = [
-    # ===== LARGE CAP ($10B+) =====
     # Mag 7 + tech
     'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA',
     'AVGO', 'AMD', 'CRM', 'ORCL', 'ADBE', 'NFLX', 'NBIS',
@@ -74,67 +73,17 @@ WATCHLIST = [
     'JNJ', 'LLY', 'UNH', 'MRK', 'ABBV', 'NVO', 'ARGX',
     # Consumer
     'KO', 'PEP', 'WMT', 'COST', 'HD', 'NKE', 'MCD', 'SBUX',
-    'BABA', 'DPZ', 'TGT', 'LOW',
+    'BBWI', 'EL', 'BABA', 'DPZ',
     # Energy
-    'XOM', 'CVX', 'KMI', 'OXY',
-    # Industrial
+    'XOM', 'CVX', 'KMI',
+    # Industrial / Other
     'BA', 'CAT', 'GE', 'HON', 'LMT', 'CLS', 'NUE', 'AMKR',
     'AXON', 'LDOS', 'RCL', 'UAL', 'AA',
     'VZ', 'T',
     'SPY', 'QQQ', 'VOO',
-    # Mid-to-large hunt names
-    'PYPL', 'TSM', 'MU', 'CCJ', 'UBER',
-    
-    # ===== MID-CAP ($2-10B) =====
-    'BBWI', 'EL',  # Consumer
-    'WRBY', 'LMND', 'MARA', 'IREN',  # Premium hunt names
-    'HIMS', 'ELF', 'CRBG', 'WBA',
-    'HBI', 'XRX', 'MARA', 'GRAB',
-    'YELP', 'ZG', 'OPEN', 'RKT',
-    'AAP', 'JWN', 'KSS', 'BIRK',
-    'BLDR', 'BPT', 'BRZE', 'CALX',
-    'CHWY', 'CIEN', 'CLF', 'COLM',
-    
-    # ===== SMALL-CAP ($300M-$2B) =====
-    'HNST', 'OKYO', 'SOFI', 'RIVN',  # From Ash's holdings
-    'AGIO', 'AMC', 'BLNK', 'CARG',
-    'CDLX', 'CGC', 'CRSR', 'DASH',
-    'DOCN', 'DKNG', 'EVRI', 'FUBO',
-    'GME', 'INSP', 'IONQ', 'JOBY',
-    'KSCP', 'LCID', 'MGNI', 'NRG',
+    'MARA', 'GRAB', 'SOFI', 'UBER', 'RIVN', 'PYPL',
+    'TSM', 'MU', 'ELF', 'HIMS', 'CCJ', 'IREN',
 ]
-
-
-# ==============================================================
-# TIER CLASSIFICATION
-# ==============================================================
-
-def classify_tier(market_cap, ticker):
-    """Classify stock into LARGE/MID/SMALL based on market cap.
-    Returns None if too small (<$300M)."""
-    if not market_cap or market_cap < 300e6:
-        return None
-    if market_cap >= 10e9:
-        return 'LARGE'
-    if market_cap >= 2e9:
-        return 'MID'
-    if market_cap >= 300e6:
-        return 'SMALL'
-    return None
-
-
-def get_tag(tier, is_quality_whitelist, is_watch=False):
-    """Get tag string and CSS class for a pick.
-    Returns (tag_text, css_class)."""
-    if is_watch:
-        return ('WL', 'wl')
-    if tier == 'LARGE':
-        return ('QW', 'qw') if is_quality_whitelist else ('PH', 'ph')
-    if tier == 'MID':
-        return ('MC', 'mc')
-    if tier == 'SMALL':
-        return ('SC', 'sc')
-    return ('WL', 'wl')
 
 
 # ==============================================================
@@ -445,8 +394,211 @@ def get_market_dashboard():
 
 
 # ==============================================================
-# OPTIONS MATH
+# MARKET SENTIMENT (Tier 1: Fear&Greed, P/C, AAII, Sectors)
 # ==============================================================
+
+import urllib.request
+
+def fetch_fear_greed():
+    """CNN Fear & Greed Index. Returns 0-100 score + label."""
+    try:
+        url = "https://production.dataviz.cnn.io/index/fearandgreed/graphdata"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+        score = int(data.get('fear_and_greed', {}).get('score', 0))
+        rating = data.get('fear_and_greed', {}).get('rating', 'unknown')
+        return {
+            'score': score,
+            'label': rating.replace('_', ' ').title(),
+            'icon': '😱' if score < 25 else '😟' if score < 45 else '😐' if score < 55 else '😊' if score < 75 else '🤑',
+        }
+    except Exception as e:
+        print(f"  ⚠️ Fear&Greed fetch failed: {e}")
+        return None
+
+
+def fetch_put_call_ratio():
+    """CBOE Total Put/Call Ratio. Returns ratio + interpretation."""
+    try:
+        url = "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_history.json"
+        # Approximate using VIX-related signals; CBOE direct is paywalled
+        # Fallback: derive from SPY put/call open interest
+        spy = yf.Ticker('SPY')
+        chains = spy.options
+        if not chains:
+            return None
+        # Use nearest expiry
+        chain = spy.option_chain(chains[0])
+        put_oi = chain.puts['openInterest'].fillna(0).sum()
+        call_oi = chain.calls['openInterest'].fillna(0).sum()
+        if call_oi == 0:
+            return None
+        ratio = put_oi / call_oi
+        if ratio > 1.2:
+            label = 'Defensive'
+            icon = '🛡️'
+        elif ratio > 0.9:
+            label = 'Balanced'
+            icon = '⚖️'
+        elif ratio > 0.7:
+            label = 'Bullish'
+            icon = '📈'
+        else:
+            label = 'Complacent'
+            icon = '⚠️'
+        return {'ratio': round(ratio, 2), 'label': label, 'icon': icon}
+    except Exception as e:
+        print(f"  ⚠️ Put/Call fetch failed: {e}")
+        return None
+
+
+def fetch_aaii_sentiment():
+    """AAII Weekly Sentiment Survey via simple RSS scrape."""
+    try:
+        # AAII publishes weekly. We use a stable scrape approach
+        url = "https://www.aaii.com/sentimentsurvey"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            html = resp.read().decode('utf-8', errors='ignore')
+        # Find bullish/bearish/neutral percentages via regex
+        bull_match = re.search(r'Bullish[^0-9]*([0-9]+\.?[0-9]*)%', html)
+        bear_match = re.search(r'Bearish[^0-9]*([0-9]+\.?[0-9]*)%', html)
+        if not bull_match or not bear_match:
+            return None
+        bull = float(bull_match.group(1))
+        bear = float(bear_match.group(1))
+        spread = bull - bear
+        if spread > 20:
+            label = 'Crowded Bull'
+            icon = '🐂'
+        elif spread > 5:
+            label = 'Bullish'
+            icon = '📈'
+        elif spread > -5:
+            label = 'Neutral'
+            icon = '😐'
+        elif spread > -20:
+            label = 'Bearish'
+            icon = '📉'
+        else:
+            label = 'Capitulation'
+            icon = '🐻'
+        return {
+            'bull': round(bull, 1),
+            'bear': round(bear, 1),
+            'spread': round(spread, 1),
+            'label': label,
+            'icon': icon,
+        }
+    except Exception as e:
+        print(f"  ⚠️ AAII fetch failed: {e}")
+        return None
+
+
+def fetch_sector_performance():
+    """Sector ETFs daily performance."""
+    sectors = {
+        'XLK': 'Technology',
+        'XLF': 'Financials',
+        'XLV': 'Healthcare',
+        'XLE': 'Energy',
+        'XLI': 'Industrials',
+        'XLY': 'Consumer Disc',
+        'XLP': 'Consumer Staples',
+        'XLU': 'Utilities',
+        'XLRE': 'Real Estate',
+        'XLB': 'Materials',
+        'XLC': 'Comm Services',
+    }
+    results = []
+    for ticker, name in sectors.items():
+        try:
+            t = yf.Ticker(ticker)
+            hist = t.history(period='5d')
+            if hist.empty or len(hist) < 2:
+                continue
+            today = float(hist['Close'].iloc[-1])
+            prev = float(hist['Close'].iloc[-2])
+            chg = (today - prev) / prev * 100
+            results.append({
+                'ticker': ticker,
+                'name': name,
+                'change': round(chg, 2),
+            })
+        except Exception:
+            continue
+    results.sort(key=lambda x: x['change'], reverse=True)
+    return results
+
+
+def get_sentiment_pack():
+    """Pull all sentiment signals."""
+    print("Pulling sentiment signals...")
+    pack = {
+        'fear_greed': fetch_fear_greed(),
+        'put_call': fetch_put_call_ratio(),
+        'aaii': fetch_aaii_sentiment(),
+        'sectors': fetch_sector_performance(),
+    }
+    if pack['fear_greed']:
+        print(f"  Fear&Greed: {pack['fear_greed']['score']} ({pack['fear_greed']['label']})")
+    if pack['put_call']:
+        print(f"  Put/Call: {pack['put_call']['ratio']} ({pack['put_call']['label']})")
+    if pack['aaii']:
+        print(f"  AAII: bull {pack['aaii']['bull']}% / bear {pack['aaii']['bear']}%")
+    if pack['sectors']:
+        print(f"  Sectors loaded: {len(pack['sectors'])}")
+    return pack
+
+
+# ==============================================================
+# POSITION SIZING
+# ==============================================================
+
+PORTFOLIO_NLV = 2_400_000  # Ash's net liq baseline
+MAX_PER_STOCK_PCT = 5  # max 5% of NLV per single name
+
+def suggest_position_size(score, red_x, vix_mode, put_strike):
+    """Suggest contract count based on score, gap risk, VIX mode."""
+    # Base size from score
+    if score >= 9:
+        base = 5
+    elif score >= 7:
+        base = 3
+    elif score >= 5:
+        base = 1
+    else:
+        base = 0
+    
+    # Adjust for gap risk (Red X)
+    if red_x is not None:
+        if red_x == 0:
+            pass  # full size
+        elif red_x == 1:
+            base = max(1, base - 1)
+        elif red_x == 2:
+            base = max(1, base // 2)
+        else:
+            base = 0  # skip
+    
+    # Adjust for VIX mode
+    mode = (vix_mode or '').upper()
+    if 'CAUTIOUS' in mode:
+        base = max(1, base // 2)
+    elif 'STAND DOWN' in mode or 'CRISIS' in mode:
+        base = 0
+    
+    # Cap by 5% NLV exposure (rough check)
+    if put_strike and put_strike > 0:
+        contract_bp = put_strike * 100  # cash-secured BP
+        max_contracts_by_size = int((PORTFOLIO_NLV * MAX_PER_STOCK_PCT / 100) / contract_bp)
+        base = min(base, max(1, max_contracts_by_size))
+    
+    return base
+
+
+
 
 def black_scholes_delta_put(S, K, T, r, sigma):
     if T <= 0 or sigma <= 0 or S <= 0 or K <= 0:
@@ -604,22 +756,12 @@ def calc_expected_move(t, S):
         return None
 
 
-def find_target_put(t, S, ticker_symbol, market_cap=None):
+def find_target_put(t, S, ticker_symbol):
     try:
         expiries = t.options
         if not expiries:
             return None
         target_dte = get_target_dte(ticker_symbol)
-        
-        # Tier-specific delta target: MID/SMALL caps want deeper OTM
-        cap_tier = classify_tier(market_cap, ticker_symbol) if market_cap else 'LARGE'
-        if cap_tier == 'LARGE':
-            target_delta = TARGET_DELTA  # -0.07 (~25-30% OTM typical)
-        elif cap_tier == 'MID':
-            target_delta = -0.05  # ~30-35% OTM typical
-        else:  # SMALL
-            target_delta = -0.04  # ~40%+ OTM typical
-        
         today = datetime.now()
         best_exp = None
         best_diff = 9999
@@ -650,7 +792,7 @@ def find_target_put(t, S, ticker_symbol, market_cap=None):
         puts = puts[(puts['strike'] < S) & (puts['bid'] > 0)]
         if puts.empty:
             return None
-        puts['delta_diff'] = (puts['delta_calc'] - target_delta).abs()
+        puts['delta_diff'] = (puts['delta_calc'] - TARGET_DELTA).abs()
         best = puts.loc[puts['delta_diff'].idxmin()]
         return {
             'expiry': best_exp,
@@ -855,225 +997,7 @@ def get_short_interest(t):
 
 
 # ==============================================================
-# MID/SMALL CAP STRICTER CHECKS
-# ==============================================================
-
-def calc_altman_z_score(t):
-    """Altman Z-Score for bankruptcy risk.
-    Z > 3.0 = SAFE, 1.8-3.0 = GREY, < 1.8 = DANGER.
-    Formula: Z = 1.2(WC/TA) + 1.4(RE/TA) + 3.3(EBIT/TA) + 0.6(MV/TL) + 1.0(S/TA)"""
-    try:
-        bs = t.balance_sheet
-        is_ = t.income_stmt
-        info = t.info
-        
-        if bs is None or bs.empty or is_ is None or is_.empty:
-            return None
-        
-        # Most recent column
-        bs_col = bs.columns[0]
-        is_col = is_.columns[0]
-        
-        # Get values (with safe defaults)
-        def get_val(df, col, *keys):
-            for key in keys:
-                if key in df.index:
-                    val = df.loc[key, col]
-                    if pd.notna(val):
-                        return float(val)
-            return None
-        
-        total_assets = get_val(bs, bs_col, 'Total Assets')
-        current_assets = get_val(bs, bs_col, 'Current Assets', 'Total Current Assets')
-        current_liab = get_val(bs, bs_col, 'Current Liabilities', 'Total Current Liabilities')
-        retained_earnings = get_val(bs, bs_col, 'Retained Earnings')
-        total_liab = get_val(bs, bs_col, 'Total Liabilities Net Minority Interest', 'Total Liab')
-        
-        ebit = get_val(is_, is_col, 'EBIT', 'Operating Income')
-        revenue = get_val(is_, is_col, 'Total Revenue', 'Revenue')
-        
-        market_cap = info.get('marketCap')
-        
-        if not all([total_assets, total_liab, market_cap]):
-            return None
-        
-        wc = (current_assets or 0) - (current_liab or 0)
-        re = retained_earnings or 0
-        ebit_v = ebit or 0
-        rev_v = revenue or 0
-        
-        z = (1.2 * (wc / total_assets) +
-             1.4 * (re / total_assets) +
-             3.3 * (ebit_v / total_assets) +
-             0.6 * (market_cap / total_liab) +
-             1.0 * (rev_v / total_assets))
-        
-        return round(z, 2)
-    except Exception:
-        return None
-
-
-def calc_consecutive_beats(t):
-    """Count consecutive EPS beats (most recent first).
-    Returns (consecutive_beats, total_in_8q, total_misses_in_8q)."""
-    try:
-        eh = t.earnings_dates
-        if eh is None or eh.empty:
-            return None
-        if 'Reported EPS' not in eh.columns or 'EPS Estimate' not in eh.columns:
-            return None
-        
-        now = pd.Timestamp.now(tz='UTC') if eh.index.tz else pd.Timestamp.now()
-        past = eh[eh.index < now].head(8)
-        
-        if past.empty:
-            return None
-        
-        consecutive = 0
-        total_beats = 0
-        total_misses = 0
-        streak_broken = False
-        
-        for _, row in past.iterrows():
-            actual = row.get('Reported EPS')
-            est = row.get('EPS Estimate')
-            if pd.notna(actual) and pd.notna(est):
-                if actual > est:
-                    total_beats += 1
-                    if not streak_broken:
-                        consecutive += 1
-                else:
-                    total_misses += 1
-                    streak_broken = True
-            else:
-                streak_broken = True
-        
-        total = total_beats + total_misses
-        return {
-            'consecutive': consecutive,
-            'beats': total_beats,
-            'total': total,
-            'streak_str': f'{total_beats}/{total}' if total > 0 else 'N/A',
-            'consec_str': f'{consecutive} in a row' if consecutive > 0 else '0',
-        }
-    except Exception:
-        return None
-
-
-def calc_revenue_growth_yoy(t):
-    """Revenue YoY growth from quarterly_financials (last quarter vs same quarter last year)."""
-    try:
-        qf = t.quarterly_financials
-        if qf is None or qf.empty:
-            return None
-        
-        revenue_keys = ['Total Revenue', 'Revenue', 'Operating Revenue']
-        rev_row = None
-        for key in revenue_keys:
-            if key in qf.index:
-                rev_row = qf.loc[key]
-                break
-        
-        if rev_row is None:
-            return None
-        
-        # Need at least 5 quarters (current + 4 quarters back for YoY)
-        if len(rev_row) < 5:
-            return None
-        
-        latest = float(rev_row.iloc[0])
-        year_ago = float(rev_row.iloc[4])
-        
-        if year_ago <= 0:
-            return None
-        
-        growth_pct = (latest - year_ago) / year_ago * 100
-        return round(growth_pct, 1)
-    except Exception:
-        return None
-
-
-def check_fcf_positive(t, n_quarters=4):
-    """Check if Free Cash Flow has been positive for last N quarters."""
-    try:
-        cf = t.quarterly_cashflow
-        if cf is None or cf.empty:
-            return None
-        
-        fcf_keys = ['Free Cash Flow']
-        fcf_row = None
-        for key in fcf_keys:
-            if key in cf.index:
-                fcf_row = cf.loc[key]
-                break
-        
-        if fcf_row is None:
-            # Fallback: Operating CF - CapEx
-            op_keys = ['Operating Cash Flow', 'Cash Flow From Continuing Operating Activities']
-            capex_keys = ['Capital Expenditure', 'Capital Expenditures']
-            op_row = None
-            cx_row = None
-            for k in op_keys:
-                if k in cf.index:
-                    op_row = cf.loc[k]
-                    break
-            for k in capex_keys:
-                if k in cf.index:
-                    cx_row = cf.loc[k]
-                    break
-            if op_row is None:
-                return None
-            if cx_row is not None:
-                fcf_row = op_row + cx_row  # capex is already negative
-            else:
-                fcf_row = op_row
-        
-        recent = fcf_row.head(n_quarters).fillna(0)
-        positive_count = sum(1 for v in recent if float(v) > 0)
-        
-        return {
-            'positive_count': positive_count,
-            'total': min(n_quarters, len(recent)),
-            'all_positive': positive_count == min(n_quarters, len(recent)),
-        }
-    except Exception:
-        return None
-
-
-def check_share_dilution(t):
-    """Check if share count has grown >5% in last 12 months (dilution)."""
-    try:
-        shares = t.get_shares_full()
-        if shares is None or shares.empty:
-            return None
-        
-        # Last 12 months
-        cutoff = pd.Timestamp.now() - pd.Timedelta(days=365)
-        if hasattr(shares.index, 'tz') and shares.index.tz:
-            cutoff = cutoff.tz_localize('UTC')
-        
-        recent = shares[shares.index >= cutoff]
-        if len(recent) < 2:
-            return None
-        
-        oldest = float(recent.iloc[0])
-        newest = float(recent.iloc[-1])
-        
-        if oldest <= 0:
-            return None
-        
-        change_pct = (newest - oldest) / oldest * 100
-        
-        return {
-            'change_pct': round(change_pct, 1),
-            'is_diluted': change_pct > 5,
-        }
-    except Exception:
-        return None
-
-
-# ==============================================================
-# SCORING (tiered: Large vs Mid vs Small)
+# SCORING
 # ==============================================================
 
 def score(d):
@@ -1082,36 +1006,15 @@ def score(d):
     passes = []
     disqualified = False
     is_q = is_quality(d['ticker'])
-    
-    # Determine tier based on market cap
-    cap_tier = classify_tier(d.get('market_cap', 0), d['ticker'])
-    if cap_tier is None:
-        flags.append('REJECT: <$300M mkt cap')
-        return {'score': 0, 'flags': flags, 'passes': [], 'tier': 'NONE', 'cap_tier': None}
-    
-    # Tier label for display
-    if cap_tier == 'LARGE':
-        d['tier'] = 'QUALITY' if is_q else 'HUNT'
-    elif cap_tier == 'MID':
-        d['tier'] = 'MID'
-    else:
-        d['tier'] = 'SMALL'
-    d['cap_tier'] = cap_tier
-    
-    # Tier-specific config
-    if cap_tier == 'LARGE':
-        min_analysts = 3
-        min_oi = 50
-    elif cap_tier == 'MID':
-        min_analysts = 5
-        min_oi = 200
-    else:  # SMALL
-        min_analysts = 7
-        min_oi = 500
+    d['tier'] = 'QUALITY' if is_q else 'HUNT'
     
     # Hard filters
-    if d.get('analyst_count', 0) < min_analysts:
-        flags.append(f'REJECT: <{min_analysts} analysts ({cap_tier})')
+    if d['market_cap'] < MIN_MARKET_CAP:
+        flags.append('REJECT: <$10B mkt cap')
+        disqualified = True
+    
+    if d.get('analyst_count', 0) < 3:
+        flags.append('REJECT: No analyst coverage')
         disqualified = True
     
     if d.get('days_to_earnings', 99) > 7:
@@ -1130,95 +1033,14 @@ def score(d):
         disqualified = True
     else:
         ratio = em['expected_pct'] / es['avg_move']
-        if cap_tier == 'LARGE':
-            edge_threshold = 1.0 if is_q else 1.5
-        elif cap_tier == 'MID':
-            edge_threshold = 2.0
-        else:  # SMALL
-            edge_threshold = 2.5
-        
+        edge_threshold = 1.0 if is_q else 1.5
         if ratio < edge_threshold:
-            flags.append(f'REJECT: Weak edge {ratio:.1f}x ({cap_tier} needs {edge_threshold}x)')
+            flags.append(f'REJECT: Weak edge {ratio:.1f}x')
             disqualified = True
-        
-        if cap_tier == 'LARGE':
-            gap_threshold = 5 if is_q else 3
-        elif cap_tier == 'MID':
-            gap_threshold = 2
-        else:  # SMALL
-            gap_threshold = 2
-        
+        gap_threshold = 5 if is_q else 3
         if es['red_x_count'] >= gap_threshold:
-            flags.append(f'REJECT: {es["red_x_count"]}/8 gap risk ({cap_tier})')
+            flags.append(f'REJECT: {es["red_x_count"]}/8 gap risk')
             disqualified = True
-    
-    # OI minimum check (only enforced for MID/SMALL caps; LARGE uses OI as scoring bonus)
-    if cap_tier in ('MID', 'SMALL') and p and p.get('oi', 0) < min_oi:
-        flags.append(f'REJECT: OI {p.get("oi",0)} < {min_oi} ({cap_tier})')
-        disqualified = True
-    
-    # ===== MID/SMALL CAP STRICTER FILTERS =====
-    if cap_tier in ('MID', 'SMALL') and not disqualified:
-        # Altman Z-Score (bankruptcy)
-        z = d.get('altman_z')
-        z_threshold = 3.0 if cap_tier == 'MID' else 3.5
-        if z is None:
-            flags.append(f'REJECT: Z-Score unavailable ({cap_tier} requires)')
-            disqualified = True
-        elif z < z_threshold:
-            flags.append(f'REJECT: Z-Score {z} < {z_threshold} ({cap_tier} bankruptcy risk)')
-            disqualified = True
-        
-        # Earnings beats streak
-        beats_data = d.get('beats_streak')
-        if beats_data:
-            if cap_tier == 'MID':
-                # 6/8 OR 4 in a row
-                ok = beats_data['beats'] >= 6 or beats_data['consecutive'] >= 4
-                if not ok:
-                    flags.append(f'REJECT: Beats {beats_data["streak_str"]} ({beats_data["consec_str"]}) - MID needs 6/8 or 4 streak')
-                    disqualified = True
-            else:  # SMALL
-                # 7/8 OR 6 in a row
-                ok = beats_data['beats'] >= 7 or beats_data['consecutive'] >= 6
-                if not ok:
-                    flags.append(f'REJECT: Beats {beats_data["streak_str"]} ({beats_data["consec_str"]}) - SMALL needs 7/8 or 6 streak')
-                    disqualified = True
-        else:
-            flags.append(f'REJECT: Beats data unavailable')
-            disqualified = True
-        
-        # Revenue growth YoY
-        rev_growth = d.get('revenue_growth')
-        rev_threshold = 5 if cap_tier == 'MID' else 10
-        if rev_growth is None:
-            flags.append(f'REJECT: Revenue growth unavailable')
-            disqualified = True
-        elif rev_growth < rev_threshold:
-            flags.append(f'REJECT: Rev growth {rev_growth}% < {rev_threshold}% ({cap_tier})')
-            disqualified = True
-        
-        # FCF positive
-        fcf = d.get('fcf_check')
-        if fcf and not fcf.get('all_positive'):
-            flags.append(f'REJECT: FCF only {fcf["positive_count"]}/{fcf["total"]} positive')
-            disqualified = True
-        elif fcf is None:
-            flags.append(f'REJECT: FCF data unavailable')
-            disqualified = True
-        
-        # Dilution check
-        dil = d.get('dilution_check')
-        if dil and dil.get('is_diluted'):
-            flags.append(f'REJECT: Diluted {dil["change_pct"]}% in 12mo')
-            disqualified = True
-        
-        # SMALL cap requires insider buying
-        if cap_tier == 'SMALL':
-            insider = d.get('insider_activity', {})
-            if insider.get('signal') != 'bullish':
-                flags.append(f'REJECT: SMALL cap requires insider buying signal')
-                disqualified = True
     
     # Red alert check — auto-skip
     rf = d.get('red_flags', {})
@@ -1227,9 +1049,9 @@ def score(d):
         disqualified = True
     
     if disqualified:
-        return {'score': 0, 'flags': flags, 'passes': [], 'tier': d['tier'], 'cap_tier': cap_tier}
+        return {'score': 0, 'flags': flags, 'passes': [], 'tier': d['tier']}
     
-    # ===== SOFT SCORING =====
+    # Soft scoring
     ratio = em['expected_pct'] / es['avg_move']
     if ratio >= 4:
         s += 4; passes.append(f'Massive edge {ratio:.1f}x')
@@ -1259,39 +1081,15 @@ def score(d):
         elif rec in ('buy', 'moderate_buy'):
             s += 1
     
-    # Tier-specific bonus
-    if cap_tier == 'MID':
-        beats_data = d.get('beats_streak')
-        if beats_data and beats_data['beats'] >= 7:
-            s += 1; passes.append(f'Mid-cap beats {beats_data["streak_str"]}')
-        z = d.get('altman_z')
-        if z and z >= 5:
-            s += 1; passes.append(f'Z-Score {z} (fortress)')
-    elif cap_tier == 'SMALL':
-        beats_data = d.get('beats_streak')
-        if beats_data and beats_data['consecutive'] >= 8:
-            s += 1.5; passes.append('All 8 quarter beat streak')
-        z = d.get('altman_z')
-        if z and z >= 6:
-            s += 1.5; passes.append(f'Z-Score {z} (rock solid)')
-    
     peg = d.get('peg')
     if peg and 0 < peg < 2:
         s += 1; passes.append(f'PEG {peg:.1f}')
     elif peg and peg < 3:
         s += 0.5
     
-    # OTM bonus (tier-specific thresholds)
-    if cap_tier == 'LARGE':
-        otm_target = 35
-    elif cap_tier == 'MID':
-        otm_target = 30
-    else:  # SMALL
-        otm_target = 40
-    
-    if p['pct_otm'] >= otm_target and p['oi'] >= min_oi:
+    if p['pct_otm'] >= 35 and p['oi'] >= 100:
         s += 1; passes.append(f'{p["pct_otm"]:.0f}% OTM')
-    elif p['pct_otm'] >= otm_target - 10:
+    elif p['pct_otm'] >= 25:
         s += 0.5
     
     dte = d.get('days_to_earnings', 99)
@@ -1326,6 +1124,7 @@ def score(d):
     
     s += max(-1, min(1, sentiment_score * 0.3))
     
+    # Sentiment label
     if sentiment_score >= 2:
         d['sentiment'] = 'BULLISH'
     elif sentiment_score >= 0:
@@ -1333,7 +1132,7 @@ def score(d):
     else:
         d['sentiment'] = 'BEARISH'
     
-    return {'score': round(s, 1), 'flags': flags, 'passes': passes, 'tier': d['tier'], 'cap_tier': cap_tier}
+    return {'score': round(s, 1), 'flags': flags, 'passes': passes, 'tier': d['tier']}
 
 
 # ==============================================================
@@ -1388,7 +1187,7 @@ def process_ticker(ticker):
         
         d['earnings_stats'] = calc_avg_earnings_move(t, current_earnings_date=ne)
         d['expected_move'] = calc_expected_move(t, S)
-        d['put_trade'] = find_target_put(t, S, ticker, d['market_cap'])
+        d['put_trade'] = find_target_put(t, S, ticker)
         
         # Auto-signals
         d['insider_activity'] = get_insider_activity(t)
@@ -1397,21 +1196,6 @@ def process_ticker(ticker):
         d['analyst_revisions'] = get_analyst_revisions(t)
         d['red_flags'] = check_news_red_flags(t)
         d['short_interest'] = get_short_interest(t)
-        
-        # Mid/Small cap stricter checks (only run if MID or SMALL tier)
-        cap_tier_check = classify_tier(d.get('market_cap', 0), ticker)
-        if cap_tier_check in ('MID', 'SMALL'):
-            d['altman_z'] = calc_altman_z_score(t)
-            d['beats_streak'] = calc_consecutive_beats(t)
-            d['revenue_growth'] = calc_revenue_growth_yoy(t)
-            d['fcf_check'] = check_fcf_positive(t, n_quarters=4)
-            d['dilution_check'] = check_share_dilution(t)
-        else:
-            d['altman_z'] = None
-            d['beats_streak'] = None
-            d['revenue_growth'] = None
-            d['fcf_check'] = None
-            d['dilution_check'] = None
         
         if d['earnings_stats'] and d['expected_move']:
             avg = d['earnings_stats']['avg_move']
@@ -1481,7 +1265,7 @@ def fund_class(value, kind):
     return 'fund-warn', str(value)
 
 
-def render_html(results, scan_date, dashboard, economic_events, caution):
+def render_html(results, scan_date, dashboard, economic_events, caution, sentiment=None):
     results.sort(key=lambda x: (x['score'], x['edge_ratio']), reverse=True)
     
     top_picks = [r for r in results if r['score'] >= 7]
@@ -1501,12 +1285,6 @@ def render_html(results, scan_date, dashboard, economic_events, caution):
     def get_tag(r, src):
         if src == 'watch':
             return ('WL', 'wl')
-        cap_tier = r.get('cap_tier', 'LARGE')
-        if cap_tier == 'MID':
-            return ('MC', 'mc')
-        if cap_tier == 'SMALL':
-            return ('SC', 'sc')
-        # LARGE cap
         if r.get('tier') == 'QUALITY':
             return ('QW', 'qw')
         return ('PH', 'ph')
@@ -1604,44 +1382,74 @@ def render_html(results, scan_date, dashboard, economic_events, caution):
         
         signals_html = ' · '.join(sig_parts) if sig_parts else '⚪ Limited data'
         
-        # Strict checks row (MID/SMALL caps only)
-        strict_checks_html = ''
-        cap_tier = r.get('cap_tier')
-        if cap_tier in ('MID', 'SMALL'):
-            check_parts = []
-            z = r.get('altman_z')
-            if z is not None:
-                z_class = 'sig-good' if z >= 3 else 'sig-bad'
-                check_parts.append(f'<span class="{z_class}">Z-Score {z}</span>')
-            
-            bs = r.get('beats_streak')
-            if bs:
-                star = ' ⭐' if bs.get('beats', 0) >= 7 else ''
-                check_parts.append(f'<span class="sig-good">Beats {bs["streak_str"]}{star}</span>')
-            
-            rg = r.get('revenue_growth')
-            if rg is not None:
-                rg_class = 'sig-good' if rg > 0 else 'sig-bad'
-                check_parts.append(f'<span class="{rg_class}">Rev YoY {rg:+.1f}%</span>')
-            
-            fcf = r.get('fcf_check')
-            if fcf:
-                fcf_class = 'sig-good' if fcf['all_positive'] else 'sig-bad'
-                check_parts.append(f'<span class="{fcf_class}">FCF {fcf["positive_count"]}/{fcf["total"]}</span>')
-            
-            dil = r.get('dilution_check')
-            if dil and not dil.get('is_diluted'):
-                check_parts.append(f'<span class="sig-good">Shares stable {dil["change_pct"]:+.1f}%</span>')
-            
-            if check_parts:
-                strict_checks_html = f'<div class="strict-checks">⚙️ {" · ".join(check_parts)}</div>'
-        
         sentiment = r.get('sentiment', 'NEUTRAL')
         sent_class = 'sent-bull' if sentiment == 'BULLISH' else 'sent-bear' if sentiment == 'BEARISH' else 'sent-neutral'
         
         warning_html = ''
         if fire_warning:
             warning_html = f'<div class="fire-warning">⚠️ {fire_warning}</div>'
+        
+        # Build hero row (the 2 signals that matter)
+        edge = r.get('edge_ratio', 0)
+        red_x = es.get('red_x_count')
+        edge_class = 'hero-edge-great' if edge >= 4 else 'hero-edge-good' if edge >= 2 else 'hero-edge-ok'
+        if red_x is None:
+            gap_class = 'hero-gap-na'
+            gap_label = '—'
+        elif red_x == 0:
+            gap_class = 'hero-gap-perfect'
+            gap_label = 'ZERO GAPS'
+        elif red_x == 1:
+            gap_class = 'hero-gap-good'
+            gap_label = f'{red_x}/8 gaps'
+        elif red_x == 2:
+            gap_class = 'hero-gap-warn'
+            gap_label = f'{red_x}/8 gaps'
+        else:
+            gap_class = 'hero-gap-bad'
+            gap_label = f'{red_x}/8 gaps'
+        
+        # Position size suggestion
+        size = r.get('suggested_size', 0)
+        if size > 0 and pt:
+            credit_per = pt.get('mid', 0) * 100
+            total_credit = credit_per * size
+            bp_required = pt.get('strike', 0) * 100 * size
+            size_html = f"""
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">{size} contract{'s' if size != 1 else ''}</span>
+                        <span class="size-credit">→ ${total_credit:,.0f} credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~${bp_required:,.0f}</div>
+                </div>
+            """
+        elif size == 0:
+            size_html = '<div class="position-size size-skip">⏸️ Skip — risk filters say no</div>'
+        else:
+            size_html = ''
+        
+        # Compact signals (just the bullish ones)
+        good_sigs = []
+        ins = r.get('insider_activity', {})
+        bb = r.get('buybacks', {})
+        eps = r.get('eps_streak', {})
+        rev = r.get('analyst_revisions', {})
+        rf = r.get('red_flags', {})
+        
+        if ins.get('signal') == 'bullish':
+            good_sigs.append(f'Insider buys ({ins["buys"]})')
+        if bb.get('signal') in ('strong', 'moderate') and bb.get('amount'):
+            good_sigs.append(f'Buybacks ${bb["amount"]/1e9:.1f}B')
+        if eps.get('beats', 0) >= 3:
+            good_sigs.append(f'EPS {eps["streak"]}')
+        if rev.get('signal') == 'bullish':
+            good_sigs.append(f'Upgrades +{rev["upgrades"]}')
+        if rf.get('signal') == 'clear':
+            good_sigs.append('No red flags')
+        
+        signals_compact = ' · '.join(good_sigs) if good_sigs else '⚪ No standout signals'
         
         return f"""
         <div class="pick">
@@ -1651,29 +1459,29 @@ def render_html(results, scan_date, dashboard, economic_events, caution):
                     <a href="https://unusualwhales.com/stock/{r['ticker']}/earnings" target="_blank" class="pick-ticker">{r['ticker']}</a>
                     <span class="pick-score">{r['score']}/10</span>
                     <span class="timing-pill {timing_class}">{timing}</span>
-                    <span class="pick-rec">{r['recommendation'].replace('_',' ').title()} · {r['company']} · ${r['price']:.2f}</span>
+                    <span class="pick-rec">{r['company']} · ${r['price']:.2f}</span>
                 </div>
                 <div class="pick-trade">{trade_str}</div>
-                <div class="pick-meta">
-                    <span>Edge {r['edge_ratio']}x</span>
-                    <span>Exp {em.get('expected_pct',0):.1f}% / Act {es.get('avg_move',0):.1f}%</span>
-                    <span>Red X {es.get('red_x_count','—')}/8</span>
+                <div class="hero-row">
+                    <div class="hero-stat {edge_class}">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">{edge}x</div>
+                    </div>
+                    <div class="hero-stat {gap_class}">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">{gap_label}</div>
+                    </div>
                 </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="{mcap_c}">{mcap_v}</span></span>
-                    <span>P/E <span class="{pe_c}">{pe_v}</span></span>
-                    <span>D/E <span class="{de_c}">{de_v}</span></span>
-                    <span>PEG <span class="{peg_c}">{peg_v}</span></span>
-                </div>
-                {strict_checks_html}
-                <div class="signals-inline">{signals_html}</div>
+                {size_html}
+                <div class="signals-compact">✅ {signals_compact}</div>
                 <div class="pick-bottom">
-                    <span class="sentiment {sent_class}">📊 {sentiment}</span>
-                    <span class="fire-time">{fire_str}</span>
+                    <span class="fire-time">🔥 {fire_str}</span>
                 </div>
                 {warning_html}
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -1698,10 +1506,8 @@ def render_html(results, scan_date, dashboard, economic_events, caution):
             return (tier_order, -r['score'])
         day_picks.sort(key=sort_key)
         
-        qw_count = sum(1 for r, s in day_picks if s == 'top' and r.get('cap_tier') == 'LARGE' and r.get('tier') == 'QUALITY')
-        ph_count = sum(1 for r, s in day_picks if s == 'top' and r.get('cap_tier') == 'LARGE' and r.get('tier') == 'HUNT')
-        mc_count = sum(1 for r, s in day_picks if s == 'top' and r.get('cap_tier') == 'MID')
-        sc_count = sum(1 for r, s in day_picks if s == 'top' and r.get('cap_tier') == 'SMALL')
+        qw_count = sum(1 for r, s in day_picks if s == 'top' and r.get('tier') == 'QUALITY')
+        ph_count = sum(1 for r, s in day_picks if s == 'top' and r.get('tier') == 'HUNT')
         wl_count = sum(1 for r, s in day_picks if s == 'watch')
         
         cards = ''.join(build_pick_row(r, s) for r, s in day_picks)
@@ -1711,7 +1517,7 @@ def render_html(results, scan_date, dashboard, economic_events, caution):
             <div class="day-header">
                 <div class="day-title">📅 {weekday} — {date_label}</div>
                 <div class="day-summary">
-                    <span>{qw_count} QW</span><span>{ph_count} PH</span><span>{mc_count} MC</span><span>{sc_count} SC</span><span>{wl_count} WL</span>
+                    <span>{qw_count} QW</span><span>{ph_count} PH</span><span>{wl_count} WL</span>
                 </div>
             </div>
             {cards}
@@ -1743,6 +1549,67 @@ def render_html(results, scan_date, dashboard, economic_events, caution):
             <div class="events-list">{''.join(rows)}</div>
         </div>
         """
+    
+    # Sentiment strip
+    sentiment_html = ''
+    if sentiment:
+        items = []
+        fg = sentiment.get('fear_greed')
+        if fg:
+            items.append(f"""
+                <div class="sent-item">
+                    <span class="sent-icon">{fg['icon']}</span>
+                    <div>
+                        <div class="sent-name">Fear & Greed</div>
+                        <div><span class="sent-value">{fg['score']}</span> <span class="sent-label">{fg['label']}</span></div>
+                    </div>
+                </div>
+            """)
+        pc = sentiment.get('put_call')
+        if pc:
+            items.append(f"""
+                <div class="sent-item">
+                    <span class="sent-icon">{pc['icon']}</span>
+                    <div>
+                        <div class="sent-name">Put/Call SPY</div>
+                        <div><span class="sent-value">{pc['ratio']}</span> <span class="sent-label">{pc['label']}</span></div>
+                    </div>
+                </div>
+            """)
+        aaii = sentiment.get('aaii')
+        if aaii:
+            items.append(f"""
+                <div class="sent-item">
+                    <span class="sent-icon">{aaii['icon']}</span>
+                    <div>
+                        <div class="sent-name">AAII Bull/Bear</div>
+                        <div><span class="sent-value">{aaii['bull']}/{aaii['bear']}%</span> <span class="sent-label">{aaii['label']}</span></div>
+                    </div>
+                </div>
+            """)
+        
+        sectors = sentiment.get('sectors') or []
+        sectors_html = ''
+        if sectors:
+            top3 = sectors[:3]
+            bot3 = sectors[-3:][::-1]
+            chips = []
+            for s in top3:
+                chips.append(f'<span class="sector-chip"><span class="sector-up">{s["ticker"]} ↑{s["change"]:.1f}%</span></span>')
+            chips.append('<span class="sector-chip sector-flat">·</span>')
+            for s in bot3:
+                cls = 'sector-down' if s['change'] < 0 else 'sector-flat'
+                chips.append(f'<span class="sector-chip"><span class="{cls}">{s["ticker"]} {"↓" if s["change"]<0 else "↑"}{abs(s["change"]):.1f}%</span></span>')
+            sectors_html = f'<div class="sectors-row">{"".join(chips)}</div>'
+        
+        if items or sectors_html:
+            sentiment_html = f"""
+            <div class="sentiment-strip">
+                <div class="sentiment-title">🌡️ MARKET SENTIMENT</div>
+                <div class="sentiment-grid">{''.join(items)}</div>
+                {sectors_html}
+            </div>
+            """
     
     # Dashboard tiles
     def dash_tile(label, key, fmt='{:.2f}', suffix=''):
@@ -1815,8 +1682,6 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .tag {{ flex-shrink: 0; width: 36px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; padding: 6px 0; font-weight: 700; font-size: 12px; letter-spacing: 0.05em; }}
 .tag.qw {{ background: #1e3a8a; color: #dbeafe; border: 1px solid #3b82f6; }}
 .tag.ph {{ background: #7c2d12; color: #fed7aa; border: 1px solid #f97316; }}
-.tag.mc {{ background: #4c1d95; color: #ddd6fe; border: 1px solid #8b5cf6; }}
-.tag.sc {{ background: #713f12; color: #fde68a; border: 1px solid #ca8a04; }}
 .tag.wl {{ background: #334155; color: #cbd5e1; border: 1px solid #64748b; }}
 .pick-body {{ flex: 1; min-width: 0; }}
 .pick-row1 {{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }}
@@ -1832,8 +1697,56 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .pick-trade strong {{ color: #f1f5f9; }}
 .credit {{ color: #34d399; font-weight: 600; }}
 .pick-meta {{ display: flex; gap: 12px; font-size: 10px; color: #94a3b8; flex-wrap: wrap; margin-bottom: 4px; }}
+
+/* HERO ROW — the two signals that matter */
+.hero-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }}
+.hero-stat {{ background: #1e293b; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; border: 1px solid #334155; }}
+.hero-icon {{ font-size: 20px; }}
+.hero-label {{ font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }}
+.hero-value {{ font-size: 16px; font-weight: 700; color: #f1f5f9; line-height: 1; margin-top: 2px; }}
+.hero-stat > div:not(.hero-icon) {{ display: flex; flex-direction: column; }}
+.hero-edge-great {{ border-left: 3px solid #34d399; }}
+.hero-edge-great .hero-value {{ color: #34d399; }}
+.hero-edge-good {{ border-left: 3px solid #6ee7b7; }}
+.hero-edge-good .hero-value {{ color: #6ee7b7; }}
+.hero-edge-ok {{ border-left: 3px solid #fbbf24; }}
+.hero-edge-ok .hero-value {{ color: #fbbf24; }}
+.hero-gap-perfect {{ border-left: 3px solid #34d399; }}
+.hero-gap-perfect .hero-value {{ color: #34d399; }}
+.hero-gap-good {{ border-left: 3px solid #6ee7b7; }}
+.hero-gap-warn {{ border-left: 3px solid #fbbf24; }}
+.hero-gap-warn .hero-value {{ color: #fbbf24; }}
+.hero-gap-bad {{ border-left: 3px solid #f87171; }}
+.hero-gap-bad .hero-value {{ color: #f87171; }}
+.hero-gap-na {{ border-left: 3px solid #64748b; }}
+
+/* Position sizing */
+.position-size {{ background: #064e3b; border: 1px solid #10b981; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }}
+.size-row {{ display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 12px; }}
+.size-label {{ color: #6ee7b7; font-weight: 600; }}
+.size-value {{ color: #f1f5f9; font-weight: 700; font-size: 14px; }}
+.size-credit {{ color: #34d399; font-weight: 600; }}
+.size-bp {{ font-size: 10px; color: #6ee7b7; margin-top: 4px; opacity: 0.8; }}
+.size-skip {{ background: #7f1d1d; border-color: #ef4444; color: #fca5a5; text-align: center; font-size: 12px; font-weight: 600; padding: 8px; }}
+
+/* Compact signals */
+.signals-compact {{ font-size: 11px; color: #94a3b8; margin-bottom: 6px; line-height: 1.5; }}
+
+/* Sentiment strip */
+.sentiment-strip {{ background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px 18px; margin-bottom: 14px; }}
+.sentiment-title {{ font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; font-weight: 600; }}
+.sentiment-grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }}
+.sent-item {{ display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #0f172a; border-radius: 6px; font-size: 12px; }}
+.sent-icon {{ font-size: 16px; }}
+.sent-name {{ color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; }}
+.sent-value {{ color: #f1f5f9; font-weight: 700; font-size: 13px; }}
+.sent-label {{ color: #cbd5e1; font-size: 11px; }}
+.sectors-row {{ display: flex; flex-wrap: wrap; gap: 6px; padding-top: 8px; border-top: 1px solid #334155; }}
+.sector-chip {{ font-size: 10px; padding: 3px 8px; border-radius: 4px; background: #0f172a; color: #cbd5e1; }}
+.sector-up {{ color: #34d399; }}
+.sector-down {{ color: #f87171; }}
+.sector-flat {{ color: #94a3b8; }}
 .pick-fundamentals {{ display: flex; gap: 12px; font-size: 10px; color: #94a3b8; flex-wrap: wrap; margin-bottom: 6px; }}
-.strict-checks {{ font-size: 10px; color: #94a3b8; margin-bottom: 6px; padding: 5px 8px; background: rgba(139, 92, 246, 0.1); border-radius: 4px; border-left: 2px solid #8b5cf6; }}
 .fund-good {{ color: #34d399; }}
 .fund-warn {{ color: #fbbf24; }}
 .fund-bad {{ color: #f87171; }}
@@ -1855,8 +1768,6 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .legend-tag {{ font-weight: 700; padding: 1px 6px; border-radius: 3px; font-size: 10px; }}
 .legend-tag.qw {{ background: #1e3a8a; color: #dbeafe; }}
 .legend-tag.ph {{ background: #7c2d12; color: #fed7aa; }}
-.legend-tag.mc {{ background: #4c1d95; color: #ddd6fe; }}
-.legend-tag.sc {{ background: #713f12; color: #fde68a; }}
 .legend-tag.wl {{ background: #334155; color: #cbd5e1; }}
 </style>
 </head>
@@ -1882,14 +1793,13 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
     </div>
     
     {events_html}
+    {sentiment_html}
     {day_sections}
     
     <div class="legend">
         <strong>Tags:</strong>
-        <span class="legend-tag qw">QW</span> Quality Wheel ($10B+, whitelist) · 
-        <span class="legend-tag ph">PH</span> Premium Hunt ($10B+) · 
-        <span class="legend-tag mc">MC</span> Mid-Cap ($2-10B, strict) · 
-        <span class="legend-tag sc">SC</span> Small-Cap ($300M-2B, strictest) · 
+        <span class="legend-tag qw">QW</span> Quality Wheel · 
+        <span class="legend-tag ph">PH</span> Premium Hunt · 
         <span class="legend-tag wl">WL</span> Watch List<br><br>
         <strong>VIX bands:</strong> &lt;16 calm · 16-21 normal · 21-25 cautious · 25-30 stand down · &gt;30 crisis<br>
         <strong>BMO</strong> = Before Open. <strong>AMC</strong> = After Close. Smart fire-time auto-shifts to avoid major economic events.<br>
@@ -1905,13 +1815,15 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 # ==============================================================
 
 def main():
-    print(f"Premium Hunter v6 — scanning {len(WATCHLIST)} tickers (Large + Mid + Small caps)...")
+    print(f"Premium Hunter v6 — scanning {len(WATCHLIST)} tickers...")
     print(f"Looking for earnings in next {MAX_DAYS_TO_EARNINGS} days\n")
     
     print("Pulling market dashboard...")
     dashboard = get_market_dashboard()
     vix_val = dashboard.get('VIX', {}).get('value')
     print(f"  VIX: {vix_val}")
+    
+    sentiment = get_sentiment_pack()
     
     print("Generating economic calendar...")
     economic_events = get_upcoming_economic_events(days_ahead=14)
@@ -1926,12 +1838,21 @@ def main():
     for ticker in WATCHLIST:
         d = process_ticker(ticker)
         if d:
+            # Add suggested position size
+            es = d.get('earnings_stats') or {}
+            pt = d.get('put_trade') or {}
+            d['suggested_size'] = suggest_position_size(
+                d.get('score', 0),
+                es.get('red_x_count'),
+                caution.get('mode'),
+                pt.get('strike'),
+            )
             results.append(d)
     
     print(f"\nFound {len(results)} stocks with upcoming earnings.")
     
     scan_date = datetime.now().strftime('%A, %B %d, %Y')
-    html = render_html(results, scan_date, dashboard, economic_events, caution)
+    html = render_html(results, scan_date, dashboard, economic_events, caution, sentiment)
     
     out_path = Path('report.html')
     out_path.write_text(html)
