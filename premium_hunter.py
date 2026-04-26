@@ -16,6 +16,8 @@ import sys
 import re
 from pathlib import Path
 
+from claude_scorer import score_picks
+
 # ==============================================================
 # CONFIG
 # ==============================================================
@@ -2172,8 +2174,8 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
         # SCORES + BARGAIN BADGE
         # ============================================
         my_score = r['score']
-        # Claude score - placeholder (will be filled by API integration later); fall back to score
-        claude_score = my_score  # TODO: when Claude API integrated, replace with real review
+        # Claude score from API (falls back to algo score if API unavailable)
+        claude_score = round(r.get('claude_score', my_score), 1)
         bargain = r.get('bargain_price')
         bargain_html = ''
         if bargain:
@@ -2209,37 +2211,43 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
         )
         
         # ============================================
-        # CLAUDE COMMENTARY (placeholder bullets until API integrated)
+        # CLAUDE COMMENTARY — uses real API output when available
         # ============================================
-        claude_tag = 'SAFE BET' if my_score >= 8 else 'WATCH' if my_score >= 6 else 'SKIP'
-        claude_tag_class = 'tag-safe' if my_score >= 8 else 'tag-watch' if my_score >= 6 else 'tag-skip'
-        claude_bullets = []
-        edge = r.get('edge_ratio', 0)
-        if edge >= 4:
-            claude_bullets.append(('good', f'Edge {edge}x — premium way overpriced vs actual moves'))
-        elif edge >= 2:
-            claude_bullets.append(('good', f'Solid edge {edge}x — options pricing extra fear'))
+        if r.get('claude_bullets'):
+            # Real Claude API response
+            claude_tag = r.get('claude_tag', 'WATCH')
+            claude_bullets = list(r['claude_bullets'])
         else:
-            claude_bullets.append(('warn', f'Edge only {edge}x — premium not generous'))
+            # Fallback: algo-derived placeholders
+            claude_tag = 'SAFE BET' if my_score >= 8 else 'WATCH' if my_score >= 6 else 'SKIP'
+            claude_bullets = []
+            edge = r.get('edge_ratio', 0)
+            if edge >= 4:
+                claude_bullets.append(('good', f'Edge {edge}x — premium way overpriced vs actual moves'))
+            elif edge >= 2:
+                claude_bullets.append(('good', f'Solid edge {edge}x — options pricing extra fear'))
+            else:
+                claude_bullets.append(('warn', f'Edge only {edge}x — premium not generous'))
+            
+            red_x = es.get('red_x_count', 0)
+            if red_x == 0:
+                claude_bullets.append(('good', 'Zero gap risk in last 8 quarters — boring is good'))
+            elif red_x <= 1:
+                claude_bullets.append(('good', f'Only {red_x}/8 quarters had big moves — low gap risk'))
+            else:
+                claude_bullets.append(('warn', f'{red_x}/8 quarters moved big — half-size or skip'))
+            
+            if r.get('trend_state') == 'Bull · Gold':
+                claude_bullets.append(('good', 'Strong uptrend (Bull · Gold) — confirmed institutional bid'))
+            elif r.get('trend_state') and 'Bear' in r['trend_state']:
+                claude_bullets.append(('bad', f'In {r["trend_state"]} — assignment risk elevated'))
+            
+            if pt and bargain and pt.get('strike', 0) <= bargain:
+                claude_bullets.append(('good', f'Strike below bargain price — happy if assigned'))
+            
+            claude_bullets = claude_bullets[:4]
         
-        red_x = es.get('red_x_count', 0)
-        if red_x == 0:
-            claude_bullets.append(('good', 'Zero gap risk in last 8 quarters — boring is good'))
-        elif red_x <= 1:
-            claude_bullets.append(('good', f'Only {red_x}/8 quarters had big moves — low gap risk'))
-        else:
-            claude_bullets.append(('warn', f'{red_x}/8 quarters moved big — half-size or skip'))
-        
-        if r.get('trend_state') == 'Bull · Gold':
-            claude_bullets.append(('good', 'Strong uptrend (Bull · Gold) — confirmed institutional bid'))
-        elif r.get('trend_state') and 'Bear' in r['trend_state']:
-            claude_bullets.append(('bad', f'In {r["trend_state"]} — assignment risk elevated'))
-        
-        if pt and bargain and pt.get('strike', 0) <= bargain:
-            claude_bullets.append(('good', f'Strike below bargain price — happy if assigned'))
-        
-        # Cap at 4
-        claude_bullets = claude_bullets[:4]
+        claude_tag_class = 'tag-safe' if claude_tag == 'SAFE BET' else 'tag-watch' if claude_tag == 'WATCH' else 'tag-skip'
         bullets_html = ''.join(
             f'<div class="claude-bullet bullet-{tone}"><span>●</span><span>{text}</span></div>'
             for tone, text in claude_bullets
@@ -3119,6 +3127,9 @@ def main():
             results.append(d)
     
     print(f"\nFound {len(results)} stocks with upcoming earnings.")
+    
+    # Claude second-opinion scoring
+    score_picks(results)
     
     scan_date = datetime.now().strftime('%A, %B %d, %Y')
     html = render_html(results, scan_date, dashboard, economic_events, caution, sentiment)
