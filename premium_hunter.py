@@ -2370,10 +2370,14 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
             sig_chips.append(f'<span class="sig-chip sig-insider-bad">⚠ Insider sells ({ins["sells"]})</span>')
         if eps.get('beats', 0) >= 3:
             sig_chips.append(f'<span class="sig-chip sig-eps">📊 EPS streak {eps.get("streak", "")}</span>')
-        # Short interest pill
-        si = r.get('short_interest') or {}
-        if si.get('pct') is not None:
-            si_pct = si['pct']
+        # Short interest pill — short_interest could be dict {'pct': X} OR raw float
+        si_raw = r.get('short_interest')
+        si_pct = None
+        if isinstance(si_raw, dict):
+            si_pct = si_raw.get('pct')
+        elif isinstance(si_raw, (int, float)):
+            si_pct = si_raw
+        if si_pct is not None:
             if si_pct < 5:
                 sig_chips.append(f'<span class="sig-chip sig-short-good">📉 Short int {si_pct:.1f}% ✓</span>')
             elif si_pct >= 15:
