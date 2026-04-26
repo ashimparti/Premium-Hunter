@@ -394,10 +394,418 @@ def get_market_dashboard():
 
 
 # ==============================================================
-# MARKET SENTIMENT (Tier 1: Fear&Greed, P/C, AAII, Sectors)
+# TECHNICAL ANALYSIS (1Y chart, RSI, DMA, Bollinger, ATR, IV Rank, Support, Tariff anchor)
 # ==============================================================
 
-import urllib.request
+# Tariff crash benchmark date - used as stress floor for all stocks
+TARIFF_CRASH_START = pd.Timestamp('2025-04-01')
+TARIFF_CRASH_END = pd.Timestamp('2025-05-15')
+
+
+def fetch_1y_history(ticker_obj, ticker_str):
+    """Get 1y daily price history. Returns DataFrame or None."""
+    try:
+        hist = ticker_obj.history(period='1y', auto_adjust=True)
+        if hist.empty or len(hist) < 50:
+            return None
+        return hist
+    except Exception as e:
+        print(f"    ⚠️ {ticker_str} 1y history fetch failed: {e}")
+        return None
+
+
+def calc_rsi(prices, period=14):
+    """14-day RSI. Returns single float."""
+    try:
+        delta = prices.diff()
+        gain = delta.where(delta > 0, 0).rolling(window=period).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+        val = float(rsi.iloc[-1])
+        return val if not pd.isna(val) else None
+    except Exception:
+        return None
+
+
+def calc_dma(prices, period):
+    """Moving average. Returns single float (last value)."""
+    try:
+        ma = prices.rolling(window=period).mean()
+        val = float(ma.iloc[-1])
+        return val if not pd.isna(val) else None
+    except Exception:
+        return None
+
+
+def calc_bollinger_position(prices, period=20, num_std=2):
+    """Where current price sits in Bollinger bands. Returns 0-1 (0=lower, 0.5=mid, 1=upper) or None."""
+    try:
+        ma = prices.rolling(window=period).mean()
+        std = prices.rolling(window=period).std()
+        upper = ma + num_std * std
+        lower = ma - num_std * std
+        current = float(prices.iloc[-1])
+        u = float(upper.iloc[-1])
+        l = float(lower.iloc[-1])
+        if u <= l:
+            return None
+        pos = (current - l) / (u - l)
+        return max(0, min(1, pos))
+    except Exception:
+        return None
+
+
+def calc_atr(hist, period=14):
+    """Average True Range. Returns dollar value."""
+    try:
+        high = hist['High']
+        low = hist['Low']
+        close = hist['Close']
+        prev_close = close.shift(1)
+        tr1 = high - low
+        tr2 = (high - prev_close).abs()
+        tr3 = (low - prev_close).abs()
+        tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        atr = tr.rolling(window=period).mean()
+        val = float(atr.iloc[-1])
+        return val if not pd.isna(val) else None
+    except Exception:
+        return None
+
+
+def calc_iv_rank(ticker_obj, current_iv):
+    """IV Rank vs past year. Approximate using ATR % as a proxy.
+    Returns 0-100 or None."""
+    try:
+        hist = ticker_obj.history(period='1y', auto_adjust=True)
+        if hist.empty or current_iv is None:
+            return None
+        # Use rolling 30-day realized vol as proxy
+        returns = hist['Close'].pct_change()
+        rv = returns.rolling(window=30).std() * np.sqrt(252) * 100  # annualized %
+        rv = rv.dropna()
+        if len(rv) < 30:
+            return None
+        rv_min = float(rv.min())
+        rv_max = float(rv.max())
+        if rv_max <= rv_min:
+            return None
+        # current_iv expected as percentage already
+        rank = (current_iv - rv_min) / (rv_max - rv_min) * 100
+        return max(0, min(100, rank))
+    except Exception:
+        return None
+
+
+def find_support_floors(hist, n_levels=2):
+    """Find recent support levels (local lows in last 6 months).
+    Returns list of price levels, sorted descending (closest below price first)."""
+    try:
+        # Last 6 months
+        recent = hist.tail(120) if len(hist) > 120 else hist
+        lows = recent['Low']
+        current = float(hist['Close'].iloc[-1])
+        # Find local minima: low lower than 5 days before and after
+        levels = []
+        for i in range(5, len(lows) - 5):
+            window = lows.iloc[i-5:i+6]
+            if lows.iloc[i] == window.min() and lows.iloc[i] < current * 0.97:
+                levels.append(float(lows.iloc[i]))
+        if not levels:
+            return []
+        # Cluster nearby levels (within 2%)
+        levels.sort(reverse=True)
+        clustered = []
+        for lv in levels:
+            if not clustered or abs(lv - clustered[-1]) / clustered[-1] > 0.02:
+                clustered.append(lv)
+            if len(clustered) >= n_levels:
+                break
+        return clustered
+    except Exception:
+        return []
+
+
+def find_tariff_floor(hist):
+    """Find the lowest closing price during the April 2025 tariff crash window.
+    Returns float price or None."""
+    try:
+        if hist is None or hist.empty:
+            return None
+        idx = hist.index
+        # Normalize timezone for comparison
+        if hasattr(idx, 'tz') and idx.tz is not None:
+            tariff_start = TARIFF_CRASH_START.tz_localize(idx.tz)
+            tariff_end = TARIFF_CRASH_END.tz_localize(idx.tz)
+        else:
+            tariff_start = TARIFF_CRASH_START
+            tariff_end = TARIFF_CRASH_END
+        mask = (hist.index >= tariff_start) & (hist.index <= tariff_end)
+        if not mask.any():
+            return None
+        floor = float(hist.loc[mask, 'Low'].min())
+        return floor if not pd.isna(floor) else None
+    except Exception:
+        return None
+
+
+def calc_trend_state(price, dma50, dma200):
+    """Returns trend tag: 'Bull · Gold', 'Bull', 'Bear · Death', 'Bear', or None."""
+    if not all([price, dma50, dma200]):
+        return None
+    price_above_200 = price > dma200
+    fifty_above_200 = dma50 > dma200
+    if price_above_200 and fifty_above_200:
+        return 'Bull · Gold'
+    if price_above_200:
+        return 'Bull'
+    if not fifty_above_200:
+        return 'Bear · Death'
+    return 'Bear'
+
+
+def detect_chart_dips(hist, threshold=0.04, max_dips=2):
+    """Find largest single-day drops in 1y history.
+    Returns list of {date, pct_drop, price_after} sorted by severity."""
+    try:
+        if hist is None or hist.empty:
+            return []
+        returns = hist['Close'].pct_change()
+        # Find days with significant drops
+        drops = returns[returns < -threshold].sort_values()
+        results = []
+        seen_dates = set()
+        for date, pct in drops.items():
+            # Skip if within 7 days of an already-recorded drop
+            if any(abs((date - d).days) < 7 for d in seen_dates):
+                continue
+            results.append({
+                'date': date,
+                'pct': float(pct),
+                'price_after': float(hist.loc[date, 'Close']),
+            })
+            seen_dates.add(date)
+            if len(results) >= max_dips:
+                break
+        # Sort by date for chart positioning
+        results.sort(key=lambda x: x['date'])
+        return results
+    except Exception:
+        return []
+
+
+def fetch_news_headlines(ticker_obj, ticker_str, n=4):
+    """Get recent news from yfinance. Returns list of {title, date, sentiment}."""
+    try:
+        news = ticker_obj.news
+        if not news:
+            return []
+        items = []
+        for n_item in news[:n*2]:
+            try:
+                content = n_item.get('content', n_item)
+                title = content.get('title') or n_item.get('title')
+                if not title:
+                    continue
+                # Date extraction
+                pub = content.get('pubDate') or content.get('providerPublishTime')
+                if isinstance(pub, str):
+                    try:
+                        date = pd.Timestamp(pub).strftime('%b %d')
+                    except:
+                        date = ''
+                elif isinstance(pub, (int, float)):
+                    date = pd.Timestamp(pub, unit='s').strftime('%b %d')
+                else:
+                    date = ''
+                # Simple sentiment (keyword-based)
+                title_lower = title.lower()
+                pos_kw = ['beat', 'upgrade', 'rise', 'surge', 'growth', 'expand', 'launch', 'record', 'strong']
+                neg_kw = ['miss', 'downgrade', 'fall', 'plunge', 'cut', 'lawsuit', 'recall', 'weak', 'decline']
+                if any(k in title_lower for k in pos_kw):
+                    sentiment = 'positive'
+                elif any(k in title_lower for k in neg_kw):
+                    sentiment = 'negative'
+                else:
+                    sentiment = 'neutral'
+                items.append({
+                    'title': title[:90] + ('...' if len(title) > 90 else ''),
+                    'date': date,
+                    'sentiment': sentiment,
+                })
+                if len(items) >= n:
+                    break
+            except Exception:
+                continue
+        return items
+    except Exception:
+        return []
+
+
+def get_company_narrative(info):
+    """Build ELI5 company description from yfinance info."""
+    try:
+        name = info.get('longName') or info.get('shortName', 'this company')
+        summary = info.get('longBusinessSummary', '')
+        sector = info.get('sector', '')
+        industry = info.get('industry', '')
+        # Try to extract first 2-3 sentences max
+        sentences = summary.replace('. ', '.|').split('|')
+        short = '. '.join(s.strip() for s in sentences[:2] if s.strip())
+        if len(short) > 280:
+            short = short[:280] + '...'
+        return short or f"{name} operates in {industry or sector}"
+    except Exception:
+        return ''
+
+
+def get_fundamentals_checklist(info, ticker_obj):
+    """4-point checklist: Revenue 5y, Profits 5y, Cash flow, Debt."""
+    checks = {
+        'revenue': None,
+        'profits': None,
+        'cashflow': None,
+        'debt': None,
+    }
+    try:
+        # Revenue growth 5y
+        fin = ticker_obj.financials
+        if fin is not None and not fin.empty and 'Total Revenue' in fin.index:
+            revs = fin.loc['Total Revenue'].dropna()
+            if len(revs) >= 3:
+                # newer columns first - check trend
+                r_list = revs.tolist()
+                # Check if generally growing
+                growing = sum(1 for i in range(len(r_list) - 1) if r_list[i] > r_list[i+1])
+                checks['revenue'] = growing >= len(r_list) - 2  # allow 1 down year
+        
+        # Profit growth
+        if fin is not None and not fin.empty and 'Net Income' in fin.index:
+            profs = fin.loc['Net Income'].dropna()
+            if len(profs) >= 3:
+                p_list = profs.tolist()
+                growing = sum(1 for i in range(len(p_list) - 1) if p_list[i] > p_list[i+1])
+                checks['profits'] = growing >= len(p_list) - 2
+        
+        # Cash flow (positive recent)
+        cf = ticker_obj.cashflow
+        if cf is not None and not cf.empty:
+            cf_keys = ['Free Cash Flow', 'Operating Cash Flow', 'Total Cash From Operating Activities']
+            for k in cf_keys:
+                if k in cf.index:
+                    vals = cf.loc[k].dropna()
+                    if len(vals) >= 2:
+                        checks['cashflow'] = (vals.iloc[0] > 0)
+                        break
+        
+        # Debt - use D/E ratio
+        de = info.get('debtToEquity')
+        if de is not None:
+            # <100 = low/moderate, 100-200 = some, >200 = high
+            if de < 100:
+                checks['debt'] = 'good'
+            elif de < 200:
+                checks['debt'] = 'okay'
+            else:
+                checks['debt'] = 'bad'
+    except Exception as e:
+        pass
+    return checks
+
+
+def find_alternative_strike(ticker_obj, current_price, target_dte=35, target_delta=-0.16):
+    """Find a short-dated alternative put strike.
+    Returns dict with strike, expiry, delta, otm_pct, mid_credit, contracts or None."""
+    try:
+        expiries = ticker_obj.options
+        if not expiries:
+            return None
+        today = pd.Timestamp.now().normalize()
+        # Find expiry closest to target_dte
+        best_exp = None
+        best_diff = 999
+        for exp in expiries:
+            try:
+                exp_date = pd.Timestamp(exp)
+                dte = (exp_date - today).days
+                if 20 <= dte <= 60:
+                    diff = abs(dte - target_dte)
+                    if diff < best_diff:
+                        best_diff = diff
+                        best_exp = exp
+            except Exception:
+                continue
+        if not best_exp:
+            return None
+        chain = ticker_obj.option_chain(best_exp)
+        puts = chain.puts
+        if puts.empty:
+            return None
+        # Calculate delta for each strike
+        T = (pd.Timestamp(best_exp) - today).days / 365.0
+        if T <= 0:
+            return None
+        S = current_price
+        candidates = []
+        for _, row in puts.iterrows():
+            K = float(row['strike'])
+            iv = float(row.get('impliedVolatility', 0))
+            if iv <= 0 or K >= S:
+                continue
+            d = black_scholes_delta_put(S, K, T, RISK_FREE, iv)
+            bid = float(row.get('bid', 0)) or 0
+            ask = float(row.get('ask', 0)) or 0
+            if bid <= 0 and ask <= 0:
+                continue
+            mid = (bid + ask) / 2 if (bid > 0 and ask > 0) else max(bid, ask)
+            candidates.append({
+                'strike': K,
+                'delta': d,
+                'iv': iv,
+                'mid': mid,
+                'expiry': best_exp,
+                'dte': int(T * 365),
+            })
+        if not candidates:
+            return None
+        # Pick closest to target delta
+        best = min(candidates, key=lambda c: abs(c['delta'] - target_delta))
+        otm_pct = (S - best['strike']) / S * 100
+        return {
+            'strike': best['strike'],
+            'expiry': best_exp,
+            'delta': round(best['delta'], 3),
+            'otm_pct': round(otm_pct, 1),
+            'mid': round(best['mid'], 2),
+            'dte': best['dte'],
+        }
+    except Exception:
+        return None
+
+
+def get_bargain_price(hist, current_price):
+    """Bargain price = stress test floor.
+    Use lower of: tariff crash low OR 4y low (approximated by 1y low * adjustment)."""
+    try:
+        if hist is None or hist.empty:
+            return None
+        one_y_low = float(hist['Low'].min())
+        tariff_floor = find_tariff_floor(hist)
+        # Bargain = lower of these = "if it goes here, it's a steal"
+        if tariff_floor:
+            bargain = min(one_y_low, tariff_floor)
+        else:
+            bargain = one_y_low
+        # Sanity: shouldn't be above current price
+        if bargain >= current_price:
+            return None
+        return round(bargain, 2)
+    except Exception:
+        return None
+
+
+
 
 def fetch_fear_greed():
     """CNN Fear & Greed Index. Returns 0-100 score + label."""
@@ -1045,7 +1453,7 @@ def score(d):
     # Red alert check — auto-skip
     rf = d.get('red_flags', {})
     if rf.get('signal') == 'red_alert':
-        flags.append(f'🚨 RED ALERT: {", ".join(rf["flags"])}')
+        flags.append(f'🚨 RED ALERT: {", ".join(rf.get("flags") or [])}')
         disqualified = True
     
     if disqualified:
@@ -1204,6 +1612,61 @@ def process_ticker(ticker):
         else:
             d['edge_ratio'] = 0
         
+        # ==============================================================
+        # v18: Technical analysis + visual data for the new card
+        # ==============================================================
+        hist = fetch_1y_history(t, ticker)
+        if hist is not None and len(hist) >= 50:
+            close = hist['Close']
+            d['hist_chart'] = {
+                'dates': [str(idx)[:10] for idx in hist.index],
+                'prices': [float(p) for p in close.tolist()],
+                'pct_1y': round((float(close.iloc[-1]) / float(close.iloc[0]) - 1) * 100, 1),
+                'low_1y': float(hist['Low'].min()),
+                'high_1y': float(hist['High'].max()),
+            }
+            d['rsi_14'] = round(calc_rsi(close, 14), 1) if calc_rsi(close, 14) else None
+            d['dma_50'] = round(calc_dma(close, 50), 2) if calc_dma(close, 50) else None
+            d['dma_200'] = round(calc_dma(close, 200), 2) if calc_dma(close, 200) else None
+            d['bollinger_pos'] = calc_bollinger_position(close)
+            d['atr_14'] = round(calc_atr(hist, 14), 2) if calc_atr(hist, 14) else None
+            d['support_floors'] = find_support_floors(hist, n_levels=2)
+            d['tariff_floor'] = find_tariff_floor(hist)
+            d['trend_state'] = calc_trend_state(d['price'], d['dma_50'], d['dma_200'])
+            d['chart_dips'] = detect_chart_dips(hist)
+            d['bargain_price'] = get_bargain_price(hist, d['price'])
+            # IV rank using current option's IV
+            current_iv = d['put_trade']['iv'] * 100 if d['put_trade'] else None
+            d['iv_rank'] = round(calc_iv_rank(t, current_iv), 0) if current_iv else None
+            # ATR distance to strike
+            if d['atr_14'] and d['put_trade']:
+                d['atrs_to_strike'] = round((d['price'] - d['put_trade']['strike']) / d['atr_14'], 1)
+            else:
+                d['atrs_to_strike'] = None
+        else:
+            d['hist_chart'] = None
+            d['rsi_14'] = None
+            d['dma_50'] = None
+            d['dma_200'] = None
+            d['bollinger_pos'] = None
+            d['atr_14'] = None
+            d['support_floors'] = []
+            d['tariff_floor'] = None
+            d['trend_state'] = None
+            d['chart_dips'] = []
+            d['bargain_price'] = None
+            d['iv_rank'] = None
+            d['atrs_to_strike'] = None
+        
+        # News + narrative
+        d['news_items'] = fetch_news_headlines(t, ticker, n=4)
+        d['company_narrative'] = get_company_narrative(info)
+        d['fundamentals'] = get_fundamentals_checklist(info, t)
+        # Beta from info
+        d['beta'] = round(info.get('beta', 0), 2) if info.get('beta') else None
+        # Alternative short-dated put
+        d['alt_put'] = find_alternative_strike(t, d['price'])
+        
         sc = score(d)
         d['score'] = sc['score']
         d['flags'] = sc['flags']
@@ -1263,6 +1726,345 @@ def fund_class(value, kind):
         else: return 'fund-bad', f'{value:.2f}'
     
     return 'fund-warn', str(value)
+
+
+def build_chart_svg(r):
+    """Build 1Y SVG price chart with dip annotations and tariff anchor."""
+    hist = r.get('hist_chart')
+    if not hist or not hist.get('prices'):
+        return '<div class="chart-empty">No chart data</div>'
+    
+    prices = hist['prices']
+    if len(prices) < 30:
+        return '<div class="chart-empty">Insufficient history</div>'
+    
+    # Chart dims
+    W, H = 400, 240
+    PAD_L, PAD_R, PAD_T, PAD_B = 8, 8, 30, 28
+    plot_w = W - PAD_L - PAD_R
+    plot_h = H - PAD_T - PAD_B
+    
+    p_min = min(prices)
+    p_max = max(prices)
+    p_range = p_max - p_min if p_max > p_min else 1
+    
+    # Build polyline points
+    n = len(prices)
+    points = []
+    for i, p in enumerate(prices):
+        x = PAD_L + (i / (n - 1)) * plot_w
+        y = PAD_T + (1 - (p - p_min) / p_range) * plot_h
+        points.append(f"{x:.1f},{y:.1f}")
+    
+    polyline_pts = ' '.join(points)
+    polygon_pts = f"{polyline_pts} {PAD_L + plot_w:.1f},{PAD_T + plot_h:.1f} {PAD_L:.1f},{PAD_T + plot_h:.1f}"
+    
+    # 1y change badge
+    pct_1y = hist.get('pct_1y', 0)
+    pct_color = '#34d399' if pct_1y >= 0 else '#f87171'
+    pct_bg = '#064e3b' if pct_1y >= 0 else '#7f1d1d'
+    pct_sign = '+' if pct_1y >= 0 else ''
+    
+    # Tariff floor line
+    tariff_line = ''
+    tariff_floor = r.get('tariff_floor')
+    if tariff_floor and p_min <= tariff_floor <= p_max:
+        ty = PAD_T + (1 - (tariff_floor - p_min) / p_range) * plot_h
+        tariff_line = f'''
+            <line x1="{PAD_L}" y1="{ty:.1f}" x2="{PAD_L + plot_w}" y2="{ty:.1f}" 
+                  stroke="#a855f7" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>
+            <rect x="{PAD_L}" y="{ty - 7:.1f}" width="100" height="14" rx="3" fill="#3b0764"/>
+            <text x="{PAD_L + 6}" y="{ty + 3:.1f}" fill="#e9d5ff" font-size="10" font-weight="600">⚠ TARIFF ${tariff_floor:.0f}</text>
+        '''
+    
+    # Dip annotations (max 2)
+    dip_html = ''
+    dips = r.get('chart_dips') or []
+    dip_dates = hist.get('dates', [])
+    for idx_dip, dip in enumerate(dips[:2]):
+        try:
+            dip_date_str = str(dip['date'])[:10]
+            if dip_date_str not in dip_dates:
+                continue
+            i = dip_dates.index(dip_date_str)
+            x = PAD_L + (i / (n - 1)) * plot_w
+            price_after = dip['price_after']
+            y = PAD_T + (1 - (price_after - p_min) / p_range) * plot_h
+            
+            # Place label box above or below depending on position
+            if y < H / 2:
+                box_y = y + 20
+                line_y2 = y + 18
+            else:
+                box_y = y - 50
+                line_y2 = y - 12
+            
+            box_x = max(PAD_L, min(W - 160, x - 75))
+            
+            try:
+                date_obj = pd.Timestamp(dip['date'])
+                date_label = date_obj.strftime('%b %Y').upper()
+            except:
+                date_label = dip_date_str
+            
+            dip_html += f'''
+                <line x1="{x:.1f}" y1="{y:.1f}" x2="{x:.1f}" y2="{line_y2:.1f}" 
+                      stroke="#f87171" stroke-width="1" stroke-dasharray="2,2" opacity="0.6"/>
+                <circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="#f87171" stroke="#0f172a" stroke-width="2"/>
+                <rect x="{box_x:.1f}" y="{box_y:.1f}" width="150" height="32" rx="4" 
+                      fill="#1e293b" stroke="#475569" stroke-width="1"/>
+                <text x="{box_x + 8:.1f}" y="{box_y + 13:.1f}" fill="#fca5a5" font-size="9" font-weight="600">{date_label}  {dip['pct']*100:.1f}%</text>
+                <text x="{box_x + 8:.1f}" y="{box_y + 26:.1f}" fill="#cbd5e1" font-size="9">News-driven dip</text>
+            '''
+        except Exception:
+            continue
+    
+    return f'''
+    <svg viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMid meet" class="chart-svg">
+        <defs>
+            <linearGradient id="pg-{r['ticker']}" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#34d399" stop-opacity="0.32"/>
+                <stop offset="100%" stop-color="#34d399" stop-opacity="0"/>
+            </linearGradient>
+        </defs>
+        <polyline points="{polyline_pts}" fill="none" stroke="#34d399" stroke-width="2.2"/>
+        <polygon points="{polygon_pts}" fill="url(#pg-{r['ticker']})"/>
+        <line x1="{PAD_L}" y1="{PAD_T + plot_h:.1f}" x2="{PAD_L + plot_w}" y2="{PAD_T + plot_h:.1f}" stroke="#1e293b" stroke-width="0.5"/>
+        <text x="{PAD_L + 2}" y="{PAD_T - 10}" fill="#64748b" font-size="13" font-weight="600" letter-spacing="0.5">1Y PRICE</text>
+        <rect x="{W - 76}" y="{H - PAD_B - 7}" width="64" height="16" rx="3" fill="{pct_bg}"/>
+        <text x="{W - 44}" y="{H - PAD_B + 5}" fill="{pct_color}" font-size="13" font-weight="600" text-anchor="middle">{pct_sign}{pct_1y:.1f}%</text>
+        {tariff_line}
+        {dip_html}
+    </svg>
+    '''
+
+
+def build_indicators_panel(r):
+    """Build the right-column indicator panel."""
+    price = r['price']
+    hist = r.get('hist_chart') or {}
+    
+    parts = []
+    
+    # 52w range
+    low_1y = hist.get('low_1y')
+    high_1y = hist.get('high_1y')
+    if low_1y and high_1y and high_1y > low_1y:
+        pos_pct = (price - low_1y) / (high_1y - low_1y) * 100
+        parts.append(f'''<div class="ind-block">
+            <div class="ind-label">52w range</div>
+            <div class="bar-52w">
+                <div class="bar-fill"></div>
+                <div class="bar-marker" style="left: calc({pos_pct:.0f}% - 4px);"></div>
+            </div>
+            <div class="bar-labels">
+                <span>${low_1y:.0f}</span>
+                <span class="bar-current">${price:.2f}</span>
+                <span>${high_1y:.0f}</span>
+            </div>
+        </div>''')
+    
+    # RSI
+    rsi = r.get('rsi_14')
+    if rsi is not None:
+        rsi_pos = max(0, min(100, rsi))
+        parts.append(f'''<div class="ind-block">
+            <div class="ind-label-row">
+                <span class="ind-label">RSI 14</span>
+                <span class="ind-val">{rsi:.0f}</span>
+            </div>
+            <div class="bar-rsi">
+                <div class="bar-rsi-low"></div>
+                <div class="bar-rsi-mid"></div>
+                <div class="bar-rsi-high"></div>
+                <div class="bar-marker" style="left: calc({rsi_pos:.0f}% - 4px);"></div>
+            </div>
+        </div>''')
+    
+    # 50 DMA
+    dma50 = r.get('dma_50')
+    if dma50:
+        pct_diff = (price - dma50) / dma50 * 100
+        # Mapping: clamp to ±20%
+        clamped = max(-20, min(20, pct_diff))
+        if clamped >= 0:
+            fill_left = 50
+            fill_width = (clamped / 20) * 50
+            marker_left = 50 + (clamped / 20) * 50
+        else:
+            fill_left = 50 + (clamped / 20) * 50  # negative
+            fill_width = -(clamped / 20) * 50
+            marker_left = 50 + (clamped / 20) * 50
+        color = '#34d399' if pct_diff >= 0 else '#f87171'
+        sign = '+' if pct_diff >= 0 else ''
+        pct_color = '#34d399' if pct_diff >= 0 else '#f87171'
+        parts.append(f'''<div class="ind-block">
+            <div class="ind-label-row">
+                <span class="ind-label">50 dma</span>
+                <span class="ind-val" style="color: {pct_color};">{sign}{pct_diff:.1f}%</span>
+            </div>
+            <div class="bar-dma">
+                <div class="bar-dma-fill" style="left: {fill_left:.0f}%; width: {fill_width:.0f}%; background: {color};"></div>
+                <div class="bar-dma-center"></div>
+                <div class="bar-marker" style="left: calc({marker_left:.0f}% - 4px);"></div>
+            </div>
+        </div>''')
+    
+    # 200 DMA
+    dma200 = r.get('dma_200')
+    if dma200:
+        pct_diff = (price - dma200) / dma200 * 100
+        clamped = max(-20, min(20, pct_diff))
+        if clamped >= 0:
+            fill_left = 50
+            fill_width = (clamped / 20) * 50
+            marker_left = 50 + (clamped / 20) * 50
+        else:
+            fill_left = 50 + (clamped / 20) * 50
+            fill_width = -(clamped / 20) * 50
+            marker_left = 50 + (clamped / 20) * 50
+        color = '#34d399' if pct_diff >= 0 else '#f87171'
+        sign = '+' if pct_diff >= 0 else ''
+        pct_color = '#34d399' if pct_diff >= 0 else '#f87171'
+        parts.append(f'''<div class="ind-block">
+            <div class="ind-label-row">
+                <span class="ind-label">200 dma</span>
+                <span class="ind-val" style="color: {pct_color};">{sign}{pct_diff:.1f}%</span>
+            </div>
+            <div class="bar-dma">
+                <div class="bar-dma-fill" style="left: {fill_left:.0f}%; width: {fill_width:.0f}%; background: {color};"></div>
+                <div class="bar-dma-center"></div>
+                <div class="bar-marker" style="left: calc({marker_left:.0f}% - 4px);"></div>
+            </div>
+        </div>''')
+    
+    # Bollinger
+    boll = r.get('bollinger_pos')
+    if boll is not None:
+        pos_pct = boll * 100
+        parts.append(f'''<div class="ind-block">
+            <div class="ind-label">Bollinger</div>
+            <div class="bar-bollinger">
+                <div class="bar-bb-cheap"></div>
+                <div class="bar-bb-normal"></div>
+                <div class="bar-bb-expensive"></div>
+                <div class="bar-bb-center-l"></div>
+                <div class="bar-bb-center-r"></div>
+                <div class="bar-marker bar-marker-tall" style="left: calc({pos_pct:.0f}% - 4px);"></div>
+            </div>
+            <div class="bar-bb-labels">
+                <span class="bb-cheap">CHEAP</span>
+                <span class="bb-normal">NORMAL</span>
+                <span class="bb-expensive">EXPENSIVE</span>
+            </div>
+        </div>''')
+    
+    # Support floors ladder (with tariff anchor)
+    pt = r.get('put_trade') or {}
+    strike = pt.get('strike')
+    supports = r.get('support_floors') or []
+    tariff_floor = r.get('tariff_floor')
+    
+    ladder_rows = []
+    # Now (top - white)
+    ladder_rows.append(('price', '#f1f5f9', '#f1f5f9', f'${price:.0f} now', '', 0))
+    # Supports
+    for sup in supports[:2]:
+        pct = (price - sup) / price * 100
+        if pct < 4:
+            color = '#fbbf24'
+            label_color = '#fde68a'
+        else:
+            color = '#f87171'
+            label_color = '#fca5a5'
+        ladder_rows.append(('support', color, label_color, f'${sup:.0f}', f'−{pct:.0f}%', pct))
+    # Tariff floor
+    if tariff_floor and tariff_floor < price:
+        pct = (price - tariff_floor) / price * 100
+        ladder_rows.append(('⚠ tariff', '#a855f7', '#e9d5ff', f'${tariff_floor:.0f}', f'−{pct:.0f}%', pct))
+    # Strike
+    if strike and strike < price:
+        pct = (price - strike) / price * 100
+        ladder_rows.append(('strike', '#34d399', '#6ee7b7', f'${strike:.0f}', f'−{pct:.0f}% ✓', pct))
+    
+    ladder_html = ''
+    for label, dot_color, label_color, value, pct_str, _ in ladder_rows:
+        is_tariff = '⚠' in label
+        bg = 'background: linear-gradient(90deg, rgba(168,85,247,0.08), transparent); border-top: 1px dashed #4c1d95; border-bottom: 1px dashed #4c1d95; padding: 4px 0;' if is_tariff else ''
+        ladder_html += f'''<div class="ladder-row" style="{bg}">
+            <div class="ladder-label" style="color: {label_color};">{label}</div>
+            <div class="ladder-dot" style="background: {dot_color};"></div>
+            <div class="ladder-value" style="color: {label_color};">{value} <span class="ladder-pct">{pct_str}</span></div>
+        </div>'''
+    
+    if ladder_html:
+        stress_note = ''
+        if tariff_floor and strike and strike < tariff_floor:
+            stress_pct = (tariff_floor - strike) / tariff_floor * 100
+            stress_note = f'<div class="stress-test"><strong>Stress test:</strong> Even at the Apr 2025 tariff panic floor of ${tariff_floor:.0f}, your strike sits another <strong style="color:#6ee7b7;">{stress_pct:.0f}% below</strong>. Stock has never traded at ${strike:.0f} in 4 years.</div>'
+        parts.append(f'''<div class="ind-block">
+            <div class="ind-label">Support floors</div>
+            <div class="ladder">{ladder_html}</div>
+            {stress_note}
+        </div>''')
+    
+    # ATR
+    atr = r.get('atr_14')
+    atrs_to = r.get('atrs_to_strike')
+    if atr and atrs_to is not None:
+        # Visual marker: clamp to range 0-25 ATRs  
+        atr_pos = min(25, max(0, atrs_to)) / 25 * 100
+        atr_color = '#34d399' if atrs_to >= 10 else '#fbbf24' if atrs_to >= 5 else '#f87171'
+        parts.append(f'''<div class="ind-block">
+            <div class="ind-label-row">
+                <span class="ind-label">ATR · daily move</span>
+                <span class="ind-val" style="color: {atr_color};">{atrs_to:.0f} ATRs to strike</span>
+            </div>
+            <div class="bar-atr">
+                <div class="bar-atr-bad"></div>
+                <div class="bar-atr-warn"></div>
+                <div class="bar-atr-good"></div>
+                <div class="bar-marker" style="left: calc({atr_pos:.0f}% - 4px);"></div>
+            </div>
+            <div class="bar-atr-labels">
+                <span class="bb-cheap">&lt;5</span>
+                <span class="bb-normal">5-10</span>
+                <span class="bb-expensive">10+ SAFE</span>
+            </div>
+            <div class="atr-note">${atr:.2f}/day</div>
+        </div>''')
+    
+    # 2x2 grid: IV rank, Beta, Trend, Short int
+    iv_rank = r.get('iv_rank')
+    beta = r.get('beta')
+    trend = r.get('trend_state')
+    si = r.get('short_interest')
+    
+    iv_color = '#34d399' if iv_rank and iv_rank >= 70 else '#fbbf24' if iv_rank and iv_rank >= 50 else '#f87171' if iv_rank and iv_rank < 30 else '#cbd5e1'
+    iv_label = 'great' if iv_rank and iv_rank >= 70 else 'good' if iv_rank and iv_rank >= 50 else 'low' if iv_rank and iv_rank < 30 else 'mid'
+    
+    trend_color = '#34d399' if trend and 'Bull' in trend else '#f87171' if trend and 'Bear' in trend else '#cbd5e1'
+    
+    si_text = '—'
+    si_color = '#cbd5e1'
+    if si:
+        si_pct = si.get('pct_short') or si.get('percent') or si
+        if isinstance(si_pct, (int, float)):
+            si_text = f'{si_pct:.1f}%'
+            if si_pct < 5:
+                si_text += ' ✓'
+                si_color = '#34d399'
+            elif si_pct > 15:
+                si_color = '#f87171'
+    
+    parts.append(f'''<div class="ind-grid">
+        <div class="ind-mini"><div class="mini-label">IV rank</div><div class="mini-val" style="color: {iv_color};">{iv_rank:.0f}% {iv_label}</div></div>
+        <div class="ind-mini"><div class="mini-label">Beta</div><div class="mini-val">{beta if beta else '—'}</div></div>
+        <div class="ind-mini"><div class="mini-label">Trend</div><div class="mini-val" style="color: {trend_color};">{trend or '—'}</div></div>
+        <div class="ind-mini"><div class="mini-label">Short int</div><div class="mini-val" style="color: {si_color};">{si_text}</div></div>
+    </div>''' if (iv_rank or beta or trend or si) else '')
+    
+    return ''.join(parts)
 
 
 def render_html(results, scan_date, dashboard, economic_events, caution, sentiment=None):
@@ -1325,163 +2127,293 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
         pt = r.get('put_trade') or {}
         es = r.get('earnings_stats') or {}
         em = r.get('expected_move') or {}
+        alt = r.get('alt_put') or {}
         
         tag, tag_class = get_tag(r, src)
         timing = r.get('earnings_timing', 'TBD')
         timing_class = 'bmo' if timing == 'BMO' else 'amc' if timing == 'AMC' else 'tbd'
+        timing_icon = '☀️' if timing == 'BMO' else '🌙' if timing == 'AMC' else '⏱'
         
-        # Smart fire time
+        # Smart fire time (in ET, not Dubai - per Ash's request)
         default_fire = get_default_fire_dt(r['next_earnings'], timing)
         adjusted_fire, fire_warning = (default_fire, None)
         if default_fire:
             adjusted_fire, fire_warning = adjust_fire_window(default_fire, economic_events)
-        fire_str = fire_time_str(r, default_fire, adjusted_fire, fire_warning)
         
-        # Trade
-        trade_str = '—'
+        # Build ET fire string (markets in NY)
+        fire_str = "Fire timing TBD"
+        if default_fire:
+            try:
+                date_obj = datetime.strptime(r['next_earnings'], '%Y-%m-%d')
+                if timing == 'BMO':
+                    prev = date_obj - timedelta(days=1)
+                    while prev.weekday() >= 5:
+                        prev -= timedelta(days=1)
+                    fire_str = f"{prev.strftime('%a %b %d')} · 11:00 AM - 1:00 PM ET"
+                elif timing == 'AMC':
+                    fire_str = f"{date_obj.strftime('%a %b %d')} · 8:00 AM - 10:00 AM ET"
+                else:
+                    fire_str = f"{date_obj.strftime('%a %b %d')} · TBD"
+            except:
+                pass
+        
+        # ============================================
+        # SCORES + BARGAIN BADGE
+        # ============================================
+        my_score = r['score']
+        # Claude score - placeholder (will be filled by API integration later); fall back to score
+        claude_score = my_score  # TODO: when Claude API integrated, replace with real review
+        bargain = r.get('bargain_price')
+        bargain_html = ''
+        if bargain:
+            bargain_html = f'''<div class="score-block">
+                <div class="score-label bargain-label">Bargain</div>
+                <div class="score-badge bargain-badge">🎯 ${bargain:.0f}</div>
+            </div>'''
+        
+        # ============================================
+        # COMPANY NARRATIVE + FUNDAMENTALS CHECKLIST
+        # ============================================
+        narrative = r.get('company_narrative', '') or f"{r['company']} · {r.get('sector', 'sector unknown')}"
+        # Cap length
+        if len(narrative) > 320:
+            narrative = narrative[:317] + '...'
+        
+        funds = r.get('fundamentals') or {}
+        def fund_check(key, label):
+            v = funds.get(key)
+            if v is True or v == 'good':
+                return f'<div class="fund-check"><span class="fund-tick">✓</span><span>{label}</span></div>'
+            elif v == 'okay':
+                return f'<div class="fund-check fund-warn"><span class="fund-tilde">~</span><span>{label}</span></div>'
+            elif v is False or v == 'bad':
+                return f'<div class="fund-check fund-bad"><span class="fund-cross">✗</span><span>{label}</span></div>'
+            return f'<div class="fund-check fund-na"><span class="fund-tilde">·</span><span>{label}</span></div>'
+        
+        fund_html = (
+            fund_check('revenue', 'Revenue 5y') +
+            fund_check('profits', 'Profits 5y') +
+            fund_check('cashflow', 'Cash flow') +
+            fund_check('debt', 'Debt')
+        )
+        
+        # ============================================
+        # CLAUDE COMMENTARY (placeholder bullets until API integrated)
+        # ============================================
+        claude_tag = 'SAFE BET' if my_score >= 8 else 'WATCH' if my_score >= 6 else 'SKIP'
+        claude_tag_class = 'tag-safe' if my_score >= 8 else 'tag-watch' if my_score >= 6 else 'tag-skip'
+        claude_bullets = []
+        edge = r.get('edge_ratio', 0)
+        if edge >= 4:
+            claude_bullets.append(('good', f'Edge {edge}x — premium way overpriced vs actual moves'))
+        elif edge >= 2:
+            claude_bullets.append(('good', f'Solid edge {edge}x — options pricing extra fear'))
+        else:
+            claude_bullets.append(('warn', f'Edge only {edge}x — premium not generous'))
+        
+        red_x = es.get('red_x_count', 0)
+        if red_x == 0:
+            claude_bullets.append(('good', 'Zero gap risk in last 8 quarters — boring is good'))
+        elif red_x <= 1:
+            claude_bullets.append(('good', f'Only {red_x}/8 quarters had big moves — low gap risk'))
+        else:
+            claude_bullets.append(('warn', f'{red_x}/8 quarters moved big — half-size or skip'))
+        
+        if r.get('trend_state') == 'Bull · Gold':
+            claude_bullets.append(('good', 'Strong uptrend (Bull · Gold) — confirmed institutional bid'))
+        elif r.get('trend_state') and 'Bear' in r['trend_state']:
+            claude_bullets.append(('bad', f'In {r["trend_state"]} — assignment risk elevated'))
+        
+        if pt and bargain and pt.get('strike', 0) <= bargain:
+            claude_bullets.append(('good', f'Strike below bargain price — happy if assigned'))
+        
+        # Cap at 4
+        claude_bullets = claude_bullets[:4]
+        bullets_html = ''.join(
+            f'<div class="claude-bullet bullet-{tone}"><span>●</span><span>{text}</span></div>'
+            for tone, text in claude_bullets
+        )
+        
+        # ============================================
+        # PRIMARY + ALT PUT ROWS
+        # ============================================
         if pt:
-            trade_str = (f'<strong>${pt["strike"]:.0f}P</strong> {pt["expiry"][:7]} · '
-                         f'{pt["delta"]*100:.1f}Δ · {pt["pct_otm"]:.0f}% OTM · '
-                         f'<span class="credit">${pt["mid"]*100:.0f} credit</span>')
+            primary_dte = pt.get('dte', 0)
+            primary_html = f'''<div class="put-row">
+                <span class="put-tag">PRIMARY · {primary_dte}d</span>
+                <span class="put-strike">${pt["strike"]:.0f}P</span>
+                <span class="put-meta">{pt["expiry"][:7]} · {pt["delta"]*100:.1f}Δ · {pt["pct_otm"]:.0f}% OTM</span>
+                <span class="put-qty">×{r.get('suggested_size', 1)}</span>
+                <span class="put-credit">${pt["mid"]*100:.0f}</span>
+            </div>'''
+        else:
+            primary_html = '<div class="put-row put-row-empty">No primary put available</div>'
         
-        # Fundamentals
-        mcap_c, mcap_v = fund_class(r['market_cap'], 'mcap')
-        pe_c, pe_v = fund_class(r.get('pe'), 'pe')
-        de_c, de_v = fund_class(r.get('debt_to_equity'), 'de')
-        peg_c, peg_v = fund_class(r.get('peg'), 'peg')
+        alt_html = ''
+        if alt:
+            alt_html = f'''<div class="put-row">
+                <span class="put-tag">ALT · {alt.get("dte", 35)}d</span>
+                <span class="put-strike">${alt["strike"]:.0f}P</span>
+                <span class="put-meta">{alt["expiry"][:10]} · {alt["delta"]*100:.0f}Δ · {alt["otm_pct"]:.0f}% OTM</span>
+                <span class="put-qty">×3</span>
+                <span class="put-credit">${alt["mid"]*100:.0f}</span>
+            </div>'''
         
-        # Auto-signals (compact inline)
-        ins = r.get('insider_activity', {})
-        bb = r.get('buybacks', {})
-        eps = r.get('eps_streak', {})
-        rev = r.get('analyst_revisions', {})
-        rf = r.get('red_flags', {})
-        si = r.get('short_interest')
+        # ============================================
+        # HERO STATS (Edge + Gap)
+        # ============================================
+        edge_class = 'hero-edge-great' if edge >= 4 else 'hero-edge-good' if edge >= 2 else 'hero-edge-ok'
+        if red_x is None:
+            gap_label = '—/8'
+            gap_class = 'hero-gap-na'
+        elif red_x == 0:
+            gap_label = '0 / 8'
+            gap_class = 'hero-gap-perfect'
+        else:
+            gap_label = f'{red_x} / 8'
+            gap_class = 'hero-gap-good' if red_x <= 1 else 'hero-gap-warn'
         
-        sig_parts = []
-        if ins.get('signal') == 'bullish':
-            sig_parts.append(f'<span class="sig-good">🟢 Insider buys {ins["buys"]}</span>')
-        elif ins.get('signal') == 'bearish':
-            sig_parts.append(f'<span class="sig-bad">⚠️ Insider sells {ins["sells"]}</span>')
+        # ============================================
+        # 1Y CHART (with dip annotations + tariff anchor)
+        # ============================================
+        chart_html = build_chart_svg(r)
         
+        # ============================================
+        # NEWS BOX
+        # ============================================
+        news_items = r.get('news_items') or []
+        news_html = ''
+        for item in news_items:
+            sent = item.get('sentiment', 'neutral')
+            icon = '▲' if sent == 'positive' else '▼' if sent == 'negative' else '●'
+            icon_class = 'news-pos' if sent == 'positive' else 'news-neg' if sent == 'negative' else 'news-neu'
+            news_html += f'''<div class="news-item">
+                <span class="news-icon {icon_class}">{icon}</span>
+                <span class="news-title">{item.get("title", "")}</span>
+                <span class="news-date">{item.get("date", "")}</span>
+            </div>'''
+        if not news_html:
+            news_html = '<div class="news-empty">No recent headlines</div>'
+        
+        # ============================================
+        # INDICATOR PANEL (right column)
+        # ============================================
+        indicators_html = build_indicators_panel(r)
+        
+        # ============================================
+        # SIGNALS ROW (restored buybacks/insider/EPS/no-red-flags)
+        # ============================================
+        ins = r.get('insider_activity') or {}
+        bb = r.get('buybacks') or {}
+        eps = r.get('eps_streak') or {}
+        rf = r.get('red_flags') or {}
+        
+        sig_chips = []
         if bb.get('signal') in ('strong', 'moderate') and bb.get('amount'):
-            sig_parts.append(f'<span class="sig-good">🟢 Buybacks ${bb["amount"]/1e9:.1f}B</span>')
-        
-        if eps.get('beats', 0) >= 3:
-            sig_parts.append(f'<span class="sig-good">🟢 EPS {eps["streak"]}</span>')
-        elif eps.get('misses', 0) >= 2:
-            sig_parts.append(f'<span class="sig-bad">⚠️ EPS misses {eps["streak"]}</span>')
-        
-        if rev.get('signal') == 'bullish':
-            sig_parts.append(f'<span class="sig-good">🟢 Upgrades +{rev["upgrades"]}</span>')
-        elif rev.get('signal') == 'bearish':
-            sig_parts.append(f'<span class="sig-bad">⚠️ Downgrades -{rev["downgrades"]}</span>')
-        
+            sig_chips.append(f'<span class="sig-chip"><span class="sig-dot">●</span>Buybacks ${bb["amount"]/1e9:.1f}B</span>')
         if rf.get('signal') == 'clear':
-            sig_parts.append('<span class="sig-good">🟢 No red flags</span>')
+            sig_chips.append(f'<span class="sig-chip"><span class="sig-dot">●</span>No red flags</span>')
+        if ins.get('signal') == 'bullish' and ins.get('buys', 0) > 0:
+            sig_chips.append(f'<span class="sig-chip"><span class="sig-dot">●</span>Insider buys ({ins["buys"]})</span>')
+        if eps.get('beats', 0) >= 3:
+            sig_chips.append(f'<span class="sig-chip"><span class="sig-dot">●</span>EPS streak {eps.get("streak", "")}</span>')
         
-        signals_html = ' · '.join(sig_parts) if sig_parts else '⚪ Limited data'
-        
-        sentiment = r.get('sentiment', 'NEUTRAL')
-        sent_class = 'sent-bull' if sentiment == 'BULLISH' else 'sent-bear' if sentiment == 'BEARISH' else 'sent-neutral'
+        signals_row_html = ''
+        if sig_chips:
+            signals_row_html = f'<div class="signals-row">{"".join(sig_chips)}</div>'
         
         warning_html = ''
         if fire_warning:
             warning_html = f'<div class="fire-warning">⚠️ {fire_warning}</div>'
         
-        # Build hero row (the 2 signals that matter)
-        edge = r.get('edge_ratio', 0)
-        red_x = es.get('red_x_count')
-        edge_class = 'hero-edge-great' if edge >= 4 else 'hero-edge-good' if edge >= 2 else 'hero-edge-ok'
-        if red_x is None:
-            gap_class = 'hero-gap-na'
-            gap_label = '—'
-        elif red_x == 0:
-            gap_class = 'hero-gap-perfect'
-            gap_label = 'ZERO GAPS'
-        elif red_x == 1:
-            gap_class = 'hero-gap-good'
-            gap_label = f'{red_x}/8 gaps'
-        elif red_x == 2:
-            gap_class = 'hero-gap-warn'
-            gap_label = f'{red_x}/8 gaps'
-        else:
-            gap_class = 'hero-gap-bad'
-            gap_label = f'{red_x}/8 gaps'
-        
-        # Position size suggestion
-        size = r.get('suggested_size', 0)
-        if size > 0 and pt:
-            credit_per = pt.get('mid', 0) * 100
-            total_credit = credit_per * size
-            bp_required = pt.get('strike', 0) * 100 * size
-            size_html = f"""
-                <div class="position-size">
-                    <div class="size-row">
-                        <span class="size-label">💰 Suggested size</span>
-                        <span class="size-value">{size} contract{'s' if size != 1 else ''}</span>
-                        <span class="size-credit">→ ${total_credit:,.0f} credit</span>
-                    </div>
-                    <div class="size-bp">Buying power: ~${bp_required:,.0f}</div>
-                </div>
-            """
-        elif size == 0:
-            size_html = '<div class="position-size size-skip">⏸️ Skip — risk filters say no</div>'
-        else:
-            size_html = ''
-        
-        # Compact signals (just the bullish ones)
-        good_sigs = []
-        ins = r.get('insider_activity', {})
-        bb = r.get('buybacks', {})
-        eps = r.get('eps_streak', {})
-        rev = r.get('analyst_revisions', {})
-        rf = r.get('red_flags', {})
-        
-        if ins.get('signal') == 'bullish':
-            good_sigs.append(f'Insider buys ({ins["buys"]})')
-        if bb.get('signal') in ('strong', 'moderate') and bb.get('amount'):
-            good_sigs.append(f'Buybacks ${bb["amount"]/1e9:.1f}B')
-        if eps.get('beats', 0) >= 3:
-            good_sigs.append(f'EPS {eps["streak"]}')
-        if rev.get('signal') == 'bullish':
-            good_sigs.append(f'Upgrades +{rev["upgrades"]}')
-        if rf.get('signal') == 'clear':
-            good_sigs.append('No red flags')
-        
-        signals_compact = ' · '.join(good_sigs) if good_sigs else '⚪ No standout signals'
-        
+        # ============================================
+        # FINAL CARD HTML
+        # ============================================
         return f"""
-        <div class="pick">
-            <div class="tag {tag_class}">{tag}</div>
+        <div class="pick-v18">
+            <div class="tag-side">{tag}</div>
             <div class="pick-body">
-                <div class="pick-row1">
-                    <a href="https://unusualwhales.com/stock/{r['ticker']}/earnings" target="_blank" class="pick-ticker">{r['ticker']}</a>
-                    <span class="pick-score">{r['score']}/10</span>
-                    <span class="timing-pill {timing_class}">{timing}</span>
-                    <span class="pick-rec">{r['company']} · ${r['price']:.2f}</span>
+                <div class="card-header">
+                    <div class="header-left">
+                        <a href="https://unusualwhales.com/stock/{r['ticker']}/earnings" target="_blank" class="card-ticker">{r['ticker']}</a>
+                        <span class="timing-icon {timing_class}" title="{timing}">{timing_icon}</span>
+                        <div class="score-block">
+                            <div class="score-label">My Score</div>
+                            <div class="score-badge score-mine">{my_score}</div>
+                        </div>
+                        <span class="score-sep">·</span>
+                        <div class="score-block">
+                            <div class="score-label score-claude-label">Claude</div>
+                            <div class="score-badge score-claude">{claude_score}</div>
+                        </div>
+                        {('<span class="score-sep">·</span>' + bargain_html) if bargain_html else ''}
+                    </div>
+                    <div class="header-right">
+                        <div class="company-name">{r['company']}</div>
+                        <div class="company-price">${r['price']:.2f}</div>
+                    </div>
                 </div>
-                <div class="pick-trade">{trade_str}</div>
+
+                <div class="company-claude-row">
+                    <div class="company-box">
+                        <div class="box-label">🍕 The company</div>
+                        <div class="box-text">{narrative}</div>
+                        <div class="fund-grid">{fund_html}</div>
+                    </div>
+                    <div class="claude-box">
+                        <div class="box-label-row">
+                            <span class="claude-c">C</span>
+                            <span class="box-label">Claude says</span>
+                            <span class="claude-tag {claude_tag_class}">{claude_tag}</span>
+                        </div>
+                        <div class="claude-bullets">{bullets_html}</div>
+                    </div>
+                </div>
+
+                {primary_html}
+                {alt_html}
+
                 <div class="hero-row">
                     <div class="hero-stat {edge_class}">
                         <div class="hero-icon">⚡</div>
-                        <div class="hero-label">EDGE</div>
-                        <div class="hero-value">{edge}x</div>
+                        <div>
+                            <div class="hero-label">Edge</div>
+                            <div class="hero-value">{edge}x</div>
+                        </div>
                     </div>
                     <div class="hero-stat {gap_class}">
                         <div class="hero-icon">🛡️</div>
-                        <div class="hero-label">GAP RISK</div>
-                        <div class="hero-value">{gap_label}</div>
+                        <div>
+                            <div class="hero-label">Gap risk</div>
+                            <div class="hero-value">{gap_label}</div>
+                        </div>
                     </div>
                 </div>
-                {size_html}
-                <div class="signals-compact">✅ {signals_compact}</div>
-                <div class="pick-bottom">
-                    <span class="fire-time">🔥 {fire_str}</span>
+
+                <div class="chart-indicators-row">
+                    <div class="chart-news-col">
+                        {chart_html}
+                        <div class="news-box">
+                            <div class="box-label">📰 Latest news</div>
+                            <div class="news-list">{news_html}</div>
+                        </div>
+                    </div>
+                    <div class="indicators-col">
+                        {indicators_html}
+                    </div>
                 </div>
+
+                {signals_row_html}
+
                 {warning_html}
-                <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
+
+                <div class="card-footer">
+                    <div class="fire-time">{fire_str}</div>
+                    <div class="verify-links">
+                        <a href="https://www.tipranks.com/stocks/{r['ticker'].lower()}/forecast" target="_blank">TipRanks</a> · 
+                        <a href="https://research.investors.com/stock-quotes/nasdaq-{r['ticker'].lower()}.htm" target="_blank">Investors.com</a> · 
+                        <a href="https://unusualwhales.com/stock/{r['ticker']}" target="_blank">UW</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1769,6 +2701,166 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .legend-tag.qw {{ background: #1e3a8a; color: #dbeafe; }}
 .legend-tag.ph {{ background: #7c2d12; color: #fed7aa; }}
 .legend-tag.wl {{ background: #334155; color: #cbd5e1; }}
+
+/* ============================================================
+   v18 CARD STYLES
+   ============================================================ */
+.pick-v18 {{ position: relative; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 12px; overflow: hidden; display: flex; margin-bottom: 14px; }}
+.pick-v18 .tag-side {{ background: #c2410c; color: #fff7ed; writing-mode: vertical-rl; transform: rotate(180deg); padding: 14px 6px; font-size: 12px; font-weight: 500; letter-spacing: 0.15em; display: flex; align-items: center; justify-content: center; min-width: 22px; }}
+.pick-v18 .pick-body {{ flex: 1; padding: 16px 18px; min-width: 0; }}
+
+.card-header {{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 18px; flex-wrap: wrap; }}
+.header-left {{ display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }}
+.card-ticker {{ color: #c4b5fd; font-size: 26px; font-weight: 500; text-decoration: none; letter-spacing: -0.02em; line-height: 1; }}
+.card-ticker:hover {{ color: #ddd6fe; }}
+.timing-icon {{ background: #fbbf24; color: #422006; padding: 6px 10px; border-radius: 50%; font-size: 14px; }}
+.timing-icon.amc {{ background: #1e3a8a; color: #dbeafe; }}
+.timing-icon.tbd {{ background: #475569; color: #cbd5e1; }}
+
+.score-block {{ display: flex; flex-direction: column; align-items: center; gap: 3px; }}
+.score-label {{ color: #64748b; font-size: 9px; text-transform: uppercase; font-weight: 500; letter-spacing: 0.04em; }}
+.score-claude-label {{ color: #c4b5fd; }}
+.bargain-label {{ color: #f9a8d4; }}
+.score-badge {{ font-size: 19px; font-weight: 500; padding: 5px 14px; border-radius: 6px; line-height: 1; }}
+.score-mine {{ background: #1e293b; border: 1px solid #475569; color: #f1f5f9; }}
+.score-claude {{ background: #2e1065; border: 1px solid #7c3aed; color: #ddd6fe; }}
+.bargain-badge {{ background: #500724; border: 1px solid #be185d; color: #fce7f3; font-size: 17px; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px; }}
+.score-sep {{ color: #475569; font-size: 16px; }}
+
+.header-right {{ display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }}
+.company-name {{ color: #f1f5f9; font-size: 16px; font-weight: 500; }}
+.company-price {{ color: #cbd5e1; font-size: 15px; font-weight: 500; }}
+
+.company-claude-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }}
+.company-box {{ background: #0c2d1a; border: 1px solid #166534; border-radius: 8px; padding: 12px 14px; }}
+.claude-box {{ background: #1e1b4b; border: 1px solid #4c1d95; border-radius: 8px; padding: 12px 14px; }}
+.box-label {{ color: #6ee7b7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }}
+.claude-box .box-label {{ color: #c4b5fd; }}
+.box-label-row {{ display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }}
+.claude-c {{ width: 18px; height: 18px; background: #6d28d9; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f5f3ff; font-size: 9px; font-weight: 600; }}
+.claude-tag {{ font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 500; margin-left: auto; }}
+.tag-safe {{ background: #064e3b; color: #6ee7b7; }}
+.tag-watch {{ background: #422006; color: #fde68a; }}
+.tag-skip {{ background: #7f1d1d; color: #fca5a5; }}
+.box-text {{ color: #d1fae5; font-size: 12px; line-height: 1.55; margin: 8px 0 10px 0; }}
+.fund-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 8px; border-top: 1px dashed #166534; }}
+.fund-check {{ display: flex; align-items: center; gap: 5px; color: #d1fae5; font-size: 10px; }}
+.fund-check.fund-warn {{ color: #fde68a; }}
+.fund-check.fund-bad {{ color: #fca5a5; }}
+.fund-check.fund-na {{ color: #94a3b8; }}
+.fund-tick {{ color: #34d399; font-size: 11px; }}
+.fund-warn .fund-tilde {{ color: #fbbf24; font-size: 11px; }}
+.fund-bad .fund-cross {{ color: #f87171; font-size: 11px; }}
+.fund-na .fund-tilde {{ color: #64748b; font-size: 11px; }}
+.claude-bullets {{ display: flex; flex-direction: column; gap: 4px; }}
+.claude-bullet {{ display: flex; gap: 7px; align-items: flex-start; font-size: 12px; line-height: 1.45; }}
+.claude-bullet > span:first-child {{ font-size: 13px; line-height: 1; margin-top: 2px; }}
+.bullet-good > span:first-child {{ color: #34d399; }} .bullet-good > span:last-child {{ color: #d1fae5; }}
+.bullet-warn > span:first-child {{ color: #fbbf24; }} .bullet-warn > span:last-child {{ color: #fde68a; }}
+.bullet-bad > span:first-child {{ color: #f87171; }} .bullet-bad > span:last-child {{ color: #fecaca; }}
+
+.put-row {{ display: grid; grid-template-columns: 110px 80px 1fr 50px 70px; gap: 10px; align-items: center; background: #0f172a; border: 1px solid #4c1d95; border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; }}
+.put-row-empty {{ display: block; color: #94a3b8; font-size: 12px; text-align: center; padding: 12px; }}
+.put-tag {{ background: #2e1065; color: #ddd6fe; font-size: 10px; font-weight: 500; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.06em; text-align: center; }}
+.put-strike {{ color: #60a5fa; font-size: 22px; font-weight: 500; letter-spacing: -0.015em; }}
+.put-meta {{ color: #cbd5e1; font-size: 13px; font-weight: 400; }}
+.put-qty {{ color: #fbbf24; font-size: 15px; font-weight: 500; text-align: center; }}
+.put-credit {{ color: #34d399; font-size: 16px; font-weight: 500; text-align: right; }}
+
+.pick-v18 .hero-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 14px 0; }}
+.pick-v18 .hero-stat {{ background: #0f172a; border: 1px solid #34d399; border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }}
+.pick-v18 .hero-stat .hero-icon {{ width: 30px; height: 30px; background: #064e3b; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; }}
+.pick-v18 .hero-stat .hero-label {{ color: #6ee7b7; font-size: 9px; text-transform: uppercase; font-weight: 500; }}
+.pick-v18 .hero-stat .hero-value {{ color: #34d399; font-size: 22px; font-weight: 500; }}
+.pick-v18 .hero-edge-good {{ border-color: #34d399; }}
+.pick-v18 .hero-edge-ok {{ border-color: #fbbf24; }} .hero-edge-ok .hero-value {{ color: #fbbf24; }}
+.pick-v18 .hero-gap-warn {{ border-color: #fbbf24; }} .hero-gap-warn .hero-value {{ color: #fbbf24; }}
+.pick-v18 .hero-gap-na {{ border-color: #475569; }} .hero-gap-na .hero-value {{ color: #94a3b8; }}
+
+.chart-indicators-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }}
+.chart-news-col {{ display: flex; flex-direction: column; gap: 12px; }}
+.chart-svg {{ width: 100%; height: auto; max-height: 260px; background: #0f172a; border: 1px solid #1e293b; border-radius: 6px; display: block; }}
+.chart-empty {{ background: #0f172a; border: 1px solid #1e293b; border-radius: 6px; padding: 60px; text-align: center; color: #64748b; font-size: 12px; }}
+.news-box {{ background: #082f49; border: 1px solid #1e40af; border-radius: 8px; padding: 12px 14px; }}
+.news-box .box-label {{ color: #93c5fd; }}
+.news-list {{ display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }}
+.news-item {{ display: flex; gap: 8px; align-items: baseline; }}
+.news-icon {{ font-size: 11px; }}
+.news-pos {{ color: #34d399; }}
+.news-neg {{ color: #f87171; }}
+.news-neu {{ color: #94a3b8; }}
+.news-title {{ color: #cbd5e1; font-size: 12px; line-height: 1.4; flex: 1; }}
+.news-date {{ color: #64748b; font-size: 9px; white-space: nowrap; }}
+.news-empty {{ color: #64748b; font-size: 11px; padding: 8px; text-align: center; }}
+
+.indicators-col {{ background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }}
+.ind-block {{ }}
+.ind-label {{ color: #64748b; font-size: 9px; text-transform: uppercase; font-weight: 500; }}
+.ind-label-row {{ display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }}
+.ind-val {{ color: #cbd5e1; font-size: 10px; font-weight: 500; }}
+
+.bar-52w {{ position: relative; height: 6px; background: #1e293b; border-radius: 3px; margin-top: 5px; }}
+.bar-52w .bar-fill {{ position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: linear-gradient(90deg, #f87171 0%, #fbbf24 50%, #34d399 100%); opacity: 0.35; border-radius: 3px; }}
+.bar-marker {{ position: absolute; top: -2px; width: 8px; height: 10px; background: #f1f5f9; border-radius: 2px; }}
+.bar-marker-tall {{ top: 4px; bottom: 4px; height: auto; }}
+.bar-labels {{ display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: #94a3b8; }}
+.bar-labels .bar-current {{ color: #f1f5f9; font-weight: 500; }}
+
+.bar-rsi {{ position: relative; height: 6px; background: #1e293b; border-radius: 3px; margin-top: 5px; }}
+.bar-rsi-low {{ position: absolute; left: 0; top: 0; height: 100%; width: 30%; background: #f87171; opacity: 0.4; border-radius: 3px 0 0 3px; }}
+.bar-rsi-mid {{ position: absolute; left: 30%; top: 0; height: 100%; width: 40%; background: #34d399; opacity: 0.3; }}
+.bar-rsi-high {{ position: absolute; left: 70%; top: 0; height: 100%; width: 30%; background: #f87171; opacity: 0.4; border-radius: 0 3px 3px 0; }}
+
+.bar-dma {{ position: relative; height: 6px; background: #1e293b; border-radius: 3px; }}
+.bar-dma-fill {{ position: absolute; top: 0; height: 100%; opacity: 0.5; }}
+.bar-dma-center {{ position: absolute; left: 50%; top: -3px; width: 1px; height: 12px; background: #475569; }}
+
+.bar-bollinger {{ position: relative; height: 22px; background: #0c1929; border-radius: 3px; overflow: hidden; margin-top: 5px; }}
+.bar-bb-cheap {{ position: absolute; left: 0; top: 0; bottom: 0; width: 25%; background: #f87171; opacity: 0.18; }}
+.bar-bb-normal {{ position: absolute; left: 25%; top: 0; bottom: 0; width: 50%; background: #34d399; opacity: 0.15; }}
+.bar-bb-expensive {{ position: absolute; right: 0; top: 0; bottom: 0; width: 25%; background: #f87171; opacity: 0.18; }}
+.bar-bb-center-l {{ position: absolute; left: 25%; top: 2px; bottom: 2px; width: 1px; background: #475569; }}
+.bar-bb-center-r {{ position: absolute; right: 25%; top: 2px; bottom: 2px; width: 1px; background: #475569; }}
+.bar-bb-labels {{ display: flex; justify-content: space-between; margin-top: 3px; font-size: 8px; }}
+.bb-cheap {{ color: #fca5a5; }} .bb-normal {{ color: #6ee7b7; }} .bb-expensive {{ color: #fca5a5; }}
+
+.ladder {{ display: flex; flex-direction: column; gap: 7px; padding: 8px 0; margin-top: 4px; }}
+.ladder-row {{ display: grid; grid-template-columns: 70px 14px 1fr; gap: 10px; align-items: center; }}
+.ladder-label {{ text-align: right; font-size: 9px; text-transform: uppercase; }}
+.ladder-dot {{ width: 10px; height: 10px; border-radius: 50%; }}
+.ladder-value {{ font-size: 11px; font-weight: 500; }}
+.ladder-pct {{ color: #94a3b8; font-size: 10px; }}
+.stress-test {{ margin-top: 12px; padding: 8px 10px; background: #2e1065; border-left: 2px solid #a855f7; border-radius: 4px; color: #e9d5ff; font-size: 10px; line-height: 1.5; }}
+.stress-test strong {{ color: #f5f3ff; }}
+
+.bar-atr {{ position: relative; height: 16px; background: #0c1929; border-radius: 3px; }}
+.bar-atr-bad {{ position: absolute; left: 0; top: 0; bottom: 0; width: 28%; background: #f87171; opacity: 0.2; }}
+.bar-atr-warn {{ position: absolute; left: 28%; top: 0; bottom: 0; width: 28%; background: #fbbf24; opacity: 0.18; }}
+.bar-atr-good {{ position: absolute; left: 56%; top: 0; bottom: 0; width: 44%; background: #34d399; opacity: 0.18; }}
+.bar-atr-labels {{ display: flex; justify-content: space-between; margin-top: 3px; font-size: 8px; }}
+.atr-note {{ color: #94a3b8; font-size: 9px; margin-top: 3px; }}
+
+.ind-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 8px; border-top: 1px dashed #1e293b; }}
+.ind-mini {{ background: #0c1929; border-radius: 5px; padding: 6px 8px; }}
+.mini-label {{ color: #64748b; font-size: 8px; text-transform: uppercase; font-weight: 500; margin-bottom: 2px; }}
+.mini-val {{ color: #cbd5e1; font-size: 12px; font-weight: 500; }}
+
+.signals-row {{ display: flex; align-items: center; gap: 16px; padding: 8px 14px; background: #0c1929; border: 1px dashed #1e293b; border-radius: 6px; font-size: 11px; color: #cbd5e1; margin-bottom: 10px; flex-wrap: wrap; }}
+.sig-chip {{ display: flex; align-items: center; gap: 5px; }}
+.sig-dot {{ color: #34d399; }}
+
+.card-footer {{ display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid #1e293b; flex-wrap: wrap; gap: 8px; }}
+.card-footer .fire-time {{ color: #fb923c; font-size: 13px; font-weight: 500; background: none; padding: 0; }}
+.verify-links {{ color: #64748b; font-size: 11px; }}
+.verify-links a {{ color: #60a5fa; text-decoration: none; }}
+.verify-links a:hover {{ color: #93c5fd; text-decoration: underline; }}
+
+@media (max-width: 720px) {{
+  .company-claude-row {{ grid-template-columns: 1fr; }}
+  .chart-indicators-row {{ grid-template-columns: 1fr; }}
+  .put-row {{ grid-template-columns: 1fr; gap: 6px; text-align: left; }}
+  .put-row > * {{ text-align: left !important; }}
+}}
 </style>
 </head>
 <body>
