@@ -2047,8 +2047,8 @@ def build_indicators_panel(r):
     
     si_text = '—'
     si_color = '#cbd5e1'
-    if si:
-        si_pct = si.get('pct_short') or si.get('percent') or si
+    if si is not None:
+        si_pct = si if isinstance(si, (int, float)) else (si.get('pct_short') or si.get('percent') if isinstance(si, dict) else None)
         if isinstance(si_pct, (int, float)):
             si_text = f'{si_pct:.1f}%'
             if si_pct < 5:
