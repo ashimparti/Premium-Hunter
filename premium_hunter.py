@@ -596,7 +596,7 @@ def detect_chart_dips(hist, threshold=0.04, max_dips=2):
 
 
 def fetch_news_headlines(ticker_obj, ticker_str, n=4):
-    """Get recent news from yfinance. Returns list of {title, date, sentiment}."""
+    """Get recent news from yfinance. Returns list of {title, date, sentiment, url}."""
     try:
         news = ticker_obj.news
         if not news:
@@ -608,6 +608,16 @@ def fetch_news_headlines(ticker_obj, ticker_str, n=4):
                 title = content.get('title') or n_item.get('title')
                 if not title:
                     continue
+                # URL extraction (yfinance has multiple possible fields)
+                url = ''
+                if isinstance(content, dict):
+                    cu = content.get('canonicalUrl') or {}
+                    ct = content.get('clickThroughUrl') or {}
+                    url = (cu.get('url') if isinstance(cu, dict) else cu) or \
+                          (ct.get('url') if isinstance(ct, dict) else ct) or \
+                          content.get('link') or ''
+                if not url:
+                    url = n_item.get('link', '')
                 # Date extraction
                 pub = content.get('pubDate') or content.get('providerPublishTime')
                 if isinstance(pub, str):
@@ -633,6 +643,7 @@ def fetch_news_headlines(ticker_obj, ticker_str, n=4):
                     'title': title[:90] + ('...' if len(title) > 90 else ''),
                     'date': date,
                     'sentiment': sentiment,
+                    'url': url,
                 })
                 if len(items) >= n:
                     break
@@ -2287,9 +2298,12 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
             sent = item.get('sentiment', 'neutral')
             icon = '▲' if sent == 'positive' else '▼' if sent == 'negative' else '●'
             icon_class = 'news-pos' if sent == 'positive' else 'news-neg' if sent == 'negative' else 'news-neu'
+            url = item.get('url', '')
+            title = item.get('title', '')
+            title_html = f'<a href="{url}" target="_blank" rel="noopener" class="news-title-link">{title}</a>' if url else f'<span class="news-title">{title}</span>'
             news_html += f'''<div class="news-item">
                 <span class="news-icon {icon_class}">{icon}</span>
-                <span class="news-title">{item.get("title", "")}</span>
+                {title_html}
                 <span class="news-date">{item.get("date", "")}</span>
             </div>'''
         if not news_html:
@@ -2860,6 +2874,169 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
   .chart-indicators-row {{ grid-template-columns: 1fr; }}
   .put-row {{ grid-template-columns: 1fr; gap: 6px; text-align: left; }}
   .put-row > * {{ text-align: left !important; }}
+}}
+/* ============================================================
+   v18 CARD STYLES — comprehensive overrides
+   ============================================================ */
+.pick-v18 {{ position: relative; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 12px; overflow: hidden; display: flex; margin-bottom: 12px; }}
+.pick-v18 .tag-side {{ background: #c2410c; color: #fff7ed; writing-mode: vertical-rl; transform: rotate(180deg); padding: 14px 6px; font-size: 12px; font-weight: 500; letter-spacing: 0.15em; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }}
+.pick-v18 .pick-body {{ flex: 1; padding: 16px 18px; min-width: 0; }}
+
+/* Card header */
+.pick-v18 .card-header {{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 18px; flex-wrap: wrap; }}
+.pick-v18 .header-left {{ display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }}
+.pick-v18 .header-right {{ display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }}
+.pick-v18 .card-ticker {{ color: #c4b5fd; font-size: 26px; font-weight: 500; text-decoration: none; letter-spacing: -0.02em; line-height: 1; }}
+.pick-v18 .card-ticker:hover {{ text-decoration: underline; }}
+.pick-v18 .timing-icon {{ background: #fbbf24; color: #422006; padding: 4px 8px; border-radius: 50%; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; }}
+.pick-v18 .timing-icon.amc {{ background: #6d28d9; color: #ddd6fe; }}
+.pick-v18 .timing-icon.tbd {{ background: #475569; color: #cbd5e1; }}
+.pick-v18 .score-block {{ display: flex; flex-direction: column; align-items: center; gap: 3px; }}
+.pick-v18 .score-label {{ font-size: 9px; text-transform: uppercase; font-weight: 500; letter-spacing: 0.04em; color: #64748b; }}
+.pick-v18 .score-claude-label {{ color: #c4b5fd; }}
+.pick-v18 .bargain-label {{ color: #f9a8d4; }}
+.pick-v18 .score-badge {{ font-size: 19px; font-weight: 500; padding: 5px 14px; border-radius: 6px; line-height: 1; display: inline-flex; align-items: center; }}
+.pick-v18 .score-mine {{ background: #1e293b; border: 1px solid #475569; color: #f1f5f9; }}
+.pick-v18 .score-claude {{ background: #2e1065; border: 1px solid #7c3aed; color: #ddd6fe; }}
+.pick-v18 .bargain-badge {{ background: #500724; border: 1px solid #be185d; color: #fce7f3; font-size: 17px; padding: 5px 12px; gap: 5px; }}
+.pick-v18 .score-sep {{ color: #475569; font-size: 16px; }}
+.pick-v18 .company-name {{ color: #f1f5f9; font-size: 16px; font-weight: 500; }}
+.pick-v18 .company-price {{ color: #cbd5e1; font-size: 15px; font-weight: 500; }}
+
+/* Company + Claude row */
+.pick-v18 .company-claude-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }}
+.pick-v18 .company-box {{ background: #0c2d1a; border: 1px solid #166534; border-radius: 8px; padding: 12px 14px; }}
+.pick-v18 .company-box .box-label {{ color: #6ee7b7; }}
+.pick-v18 .claude-box {{ background: #1e1b4b; border: 1px solid #4c1d95; border-radius: 8px; padding: 12px 14px; }}
+.pick-v18 .claude-box .box-label {{ color: #c4b5fd; }}
+.pick-v18 .box-label {{ font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }}
+.pick-v18 .box-label-row {{ display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }}
+.pick-v18 .box-text {{ color: #d1fae5; font-size: 12px; line-height: 1.55; margin: 8px 0 10px 0; }}
+.pick-v18 .claude-c {{ width: 18px; height: 18px; background: #6d28d9; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #f5f3ff; font-size: 9px; font-weight: 600; flex-shrink: 0; }}
+.pick-v18 .claude-tag {{ font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 500; margin-left: auto; }}
+.pick-v18 .tag-safe {{ background: #064e3b; color: #6ee7b7; }}
+.pick-v18 .tag-watch {{ background: #78350f; color: #fbbf24; }}
+.pick-v18 .tag-skip {{ background: #7f1d1d; color: #fca5a5; }}
+.pick-v18 .claude-bullets {{ display: flex; flex-direction: column; gap: 4px; }}
+.pick-v18 .claude-bullet {{ display: flex; gap: 7px; align-items: flex-start; font-size: 12px; line-height: 1.45; }}
+.pick-v18 .bullet-good > span:first-child {{ color: #34d399; }}
+.pick-v18 .bullet-good > span:last-child {{ color: #d1fae5; }}
+.pick-v18 .bullet-warn > span:first-child {{ color: #fbbf24; }}
+.pick-v18 .bullet-warn > span:last-child {{ color: #fde68a; }}
+.pick-v18 .bullet-bad > span:first-child {{ color: #f87171; }}
+.pick-v18 .bullet-bad > span:last-child {{ color: #fecaca; }}
+
+/* Fundamentals */
+.pick-v18 .fund-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 8px; border-top: 1px dashed #166534; margin-top: 8px; }}
+.pick-v18 .fund-check {{ display: flex; align-items: center; gap: 5px; font-size: 10px; color: #d1fae5; }}
+.pick-v18 .fund-tick {{ color: #34d399; font-size: 11px; }}
+.pick-v18 .fund-tilde {{ color: #fbbf24; font-size: 11px; }}
+.pick-v18 .fund-cross {{ color: #f87171; font-size: 11px; }}
+.pick-v18 .fund-warn {{ color: #fde68a; }}
+.pick-v18 .fund-bad {{ color: #fca5a5; }}
+.pick-v18 .fund-na {{ color: #94a3b8; }}
+
+/* Put rows — INLINE GRID */
+.pick-v18 .put-row {{ display: grid; grid-template-columns: 110px 80px 1fr 50px 70px; gap: 10px; align-items: center; background: #0f172a; border: 1px solid #4c1d95; border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; }}
+.pick-v18 .put-row-empty {{ display: block; text-align: center; color: #64748b; font-size: 12px; padding: 10px; }}
+.pick-v18 .put-tag {{ background: #2e1065; color: #ddd6fe; font-size: 10px; font-weight: 500; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.06em; text-align: center; line-height: 1.2; }}
+.pick-v18 .put-strike {{ color: #60a5fa; font-size: 22px; font-weight: 500; letter-spacing: -0.015em; }}
+.pick-v18 .put-meta {{ color: #cbd5e1; font-size: 13px; font-weight: 400; }}
+.pick-v18 .put-qty {{ color: #fbbf24; font-size: 15px; font-weight: 500; text-align: center; }}
+.pick-v18 .put-credit {{ color: #34d399; font-size: 16px; font-weight: 500; text-align: right; }}
+
+/* Hero stats */
+.pick-v18 .hero-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 14px 0; }}
+.pick-v18 .hero-stat {{ background: #0f172a; border: 1px solid #34d399; border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }}
+.pick-v18 .hero-icon {{ width: 30px; height: 30px; background: #064e3b; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }}
+.pick-v18 .hero-stat > div:not(.hero-icon) {{ display: flex; flex-direction: column; gap: 0; }}
+.pick-v18 .hero-stat .hero-label {{ font-size: 9px; color: #6ee7b7; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; }}
+.pick-v18 .hero-stat .hero-value {{ font-size: 22px; font-weight: 500; color: #34d399; line-height: 1.1; }}
+.pick-v18 .hero-edge-good {{ border-color: #6ee7b7; }}
+.pick-v18 .hero-edge-ok {{ border-color: #fbbf24; }}
+.pick-v18 .hero-edge-ok .hero-value {{ color: #fbbf24; }}
+.pick-v18 .hero-gap-warn {{ border-color: #fbbf24; }}
+.pick-v18 .hero-gap-warn .hero-value {{ color: #fbbf24; }}
+.pick-v18 .hero-gap-bad {{ border-color: #f87171; }}
+.pick-v18 .hero-gap-bad .hero-value {{ color: #f87171; }}
+.pick-v18 .hero-gap-na {{ border-color: #475569; }}
+.pick-v18 .hero-gap-na .hero-value {{ color: #94a3b8; }}
+
+/* Chart + indicators row */
+.pick-v18 .chart-indicators-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }}
+.pick-v18 .chart-news-col {{ display: flex; flex-direction: column; gap: 12px; min-width: 0; }}
+.pick-v18 svg.chart-svg {{ width: 100%; height: auto; max-height: 260px; background: #0f172a; border: 1px solid #1e293b; border-radius: 6px; display: block; }}
+.pick-v18 .chart-empty {{ background: #0f172a; border: 1px solid #1e293b; border-radius: 6px; padding: 60px; text-align: center; color: #64748b; font-size: 12px; }}
+
+/* News */
+.pick-v18 .news-box {{ background: #082f49; border: 1px solid #1e40af; border-radius: 8px; padding: 12px 14px; }}
+.pick-v18 .news-box .box-label {{ color: #93c5fd; margin-bottom: 8px; display: inline-block; }}
+.pick-v18 .news-list {{ display: flex; flex-direction: column; gap: 6px; }}
+.pick-v18 .news-item {{ display: flex; gap: 8px; align-items: baseline; font-size: 11px; line-height: 1.4; }}
+.pick-v18 .news-icon {{ font-size: 11px; flex-shrink: 0; }}
+.pick-v18 .news-pos {{ color: #34d399; }}
+.pick-v18 .news-neg {{ color: #f87171; }}
+.pick-v18 .news-neu {{ color: #94a3b8; }}
+.pick-v18 .news-title {{ color: #cbd5e1; flex: 1; }}
+.pick-v18 .news-title-link {{ color: #cbd5e1; flex: 1; text-decoration: none; }}
+.pick-v18 .news-title-link:hover {{ color: #f1f5f9; text-decoration: underline; }}
+.pick-v18 .news-date {{ color: #64748b; font-size: 9px; white-space: nowrap; flex-shrink: 0; }}
+.pick-v18 .news-empty {{ color: #64748b; font-size: 11px; font-style: italic; }}
+
+/* Indicator panel (right column) */
+.pick-v18 .indicators-col {{ background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }}
+.pick-v18 .ind-block {{ }}
+.pick-v18 .ind-label {{ color: #64748b; font-size: 9px; text-transform: uppercase; font-weight: 500; letter-spacing: 0.04em; }}
+.pick-v18 .ind-label-row {{ display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }}
+.pick-v18 .ind-val {{ color: #cbd5e1; font-size: 10px; font-weight: 500; }}
+
+/* 52w bar */
+.pick-v18 .bar-52w {{ position: relative; height: 6px; background: #1e293b; border-radius: 3px; margin-top: 5px; }}
+.pick-v18 .bar-fill {{ position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: linear-gradient(90deg, #f87171 0%, #fbbf24 50%, #34d399 100%); opacity: 0.35; border-radius: 3px; }}
+.pick-v18 .bar-labels {{ display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: #94a3b8; }}
+.pick-v18 .bar-current {{ color: #f1f5f9; font-weight: 500; }}
+
+/* Markers (universal) */
+.pick-v18 .bar-marker {{ position: absolute; top: -2px; width: 8px; height: 10px; background: #f1f5f9; border-radius: 2px; z-index: 2; }}
+.pick-v18 .bar-marker-tall {{ top: 4px; bottom: 4px; height: auto; }}
+
+/* Support floors LADDER (clean, no lines through numbers) */
+.pick-v18 .ladder {{ display: flex; flex-direction: column; gap: 7px; padding: 8px 0; margin-top: 4px; }}
+.pick-v18 .ladder-row {{ display: grid; grid-template-columns: 60px 14px 1fr; gap: 10px; align-items: center; }}
+.pick-v18 .ladder-label {{ text-align: right; font-size: 9px; text-transform: uppercase; font-weight: 500; }}
+.pick-v18 .ladder-dot {{ width: 10px; height: 10px; border-radius: 50%; }}
+.pick-v18 .ladder-value {{ font-size: 11px; font-weight: 500; }}
+.pick-v18 .ladder-pct {{ color: #94a3b8; font-size: 10px; font-weight: 400; }}
+.pick-v18 .stress-test {{ margin-top: 10px; padding: 8px 10px; background: #2e1065; border-left: 2px solid #a855f7; border-radius: 4px; color: #e9d5ff; font-size: 10px; line-height: 1.5; }}
+.pick-v18 .stress-test strong {{ color: #f5f3ff; }}
+
+/* 2x2 grid */
+.pick-v18 .ind-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 8px; border-top: 1px dashed #1e293b; }}
+.pick-v18 .ind-mini {{ background: #0c1929; border-radius: 5px; padding: 6px 8px; }}
+.pick-v18 .mini-label {{ color: #64748b; font-size: 8px; text-transform: uppercase; font-weight: 500; margin-bottom: 2px; }}
+.pick-v18 .mini-val {{ color: #cbd5e1; font-size: 12px; font-weight: 500; }}
+
+/* Signals row */
+.pick-v18 .signals-row {{ display: flex; align-items: center; gap: 16px; padding: 8px 14px; background: #0c1929; border: 1px dashed #1e293b; border-radius: 6px; font-size: 11px; color: #cbd5e1; margin-bottom: 10px; flex-wrap: wrap; }}
+.pick-v18 .sig-chip {{ display: inline-flex; align-items: center; gap: 5px; }}
+.pick-v18 .sig-dot {{ color: #34d399; }}
+
+/* Card footer */
+.pick-v18 .card-footer {{ display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid #1e293b; flex-wrap: wrap; gap: 8px; }}
+.pick-v18 .card-footer .fire-time {{ color: #fb923c; font-size: 13px; font-weight: 500; padding: 0; background: none; }}
+.pick-v18 .verify-links {{ color: #64748b; font-size: 11px; }}
+.pick-v18 .verify-links a {{ color: #60a5fa; text-decoration: none; }}
+.pick-v18 .verify-links a:hover {{ text-decoration: underline; }}
+.pick-v18 .fire-warning {{ background: #78350f; border: 1px solid #f59e0b; color: #fbbf24; padding: 6px 10px; border-radius: 4px; margin-bottom: 8px; font-size: 11px; font-weight: 500; }}
+
+/* Mobile responsive */
+@media (max-width: 720px) {{
+  .pick-v18 .company-claude-row,
+  .pick-v18 .hero-row,
+  .pick-v18 .chart-indicators-row {{ grid-template-columns: 1fr; }}
+  .pick-v18 .put-row {{ grid-template-columns: 1fr; gap: 6px; }}
+  .pick-v18 .put-credit {{ text-align: left; }}
+  .pick-v18 .put-qty {{ text-align: left; }}
 }}
 </style>
 </head>
