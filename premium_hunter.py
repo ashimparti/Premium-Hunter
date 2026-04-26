@@ -2187,10 +2187,10 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
         # ============================================
         # COMPANY NARRATIVE + FUNDAMENTALS CHECKLIST
         # ============================================
-        narrative = r.get('company_narrative', '') or f"{r['company']} · {r.get('sector', 'sector unknown')}"
+        narrative = r.get('claude_blurb') or r.get('company_narrative', '') or f"{r['company']} · {r.get('sector', 'sector unknown')}"
         # Cap length
-        if len(narrative) > 320:
-            narrative = narrative[:317] + '...'
+        if len(narrative) > 360:
+            narrative = narrative[:357] + '...'
         
         funds = r.get('fundamentals') or {}
         def fund_check(key, label):
@@ -2733,7 +2733,7 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 
 .card-header {{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 18px; flex-wrap: wrap; }}
 .header-left {{ display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }}
-.card-ticker {{ color: #c4b5fd; font-size: 26px; font-weight: 500; text-decoration: none; letter-spacing: -0.02em; line-height: 1; }}
+.card-ticker {{ color: #c4b5fd; font-size: 52px; font-weight: 700; text-decoration: none; letter-spacing: -0.03em; line-height: 1; }}
 .card-ticker:hover {{ color: #ddd6fe; }}
 .timing-icon {{ background: #fbbf24; color: #422006; padding: 6px 10px; border-radius: 50%; font-size: 14px; }}
 .timing-icon.amc {{ background: #1e3a8a; color: #dbeafe; }}
@@ -2894,7 +2894,7 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .pick-v18 .card-header {{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 18px; flex-wrap: wrap; }}
 .pick-v18 .header-left {{ display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }}
 .pick-v18 .header-right {{ display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }}
-.pick-v18 .card-ticker {{ color: #c4b5fd; font-size: 26px; font-weight: 500; text-decoration: none; letter-spacing: -0.02em; line-height: 1; }}
+.pick-v18 .card-ticker {{ color: #c4b5fd; font-size: 52px; font-weight: 700; text-decoration: none; letter-spacing: -0.03em; line-height: 1; }}
 .pick-v18 .card-ticker:hover {{ text-decoration: underline; }}
 .pick-v18 .timing-icon {{ background: #fbbf24; color: #422006; padding: 4px 8px; border-radius: 50%; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; }}
 .pick-v18 .timing-icon.amc {{ background: #6d28d9; color: #ddd6fe; }}
