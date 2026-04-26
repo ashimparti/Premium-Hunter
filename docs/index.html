@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Premium Hunter">
+<title>Premium Hunter</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%2280%22 font-size=%2280%22>🎯</text></svg>">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.5; min-height: 100vh; padding: 24px 16px; -webkit-font-smoothing: antialiased; }
+.container { max-width: 760px; margin: 0 auto; }
+header { text-align: center; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid #334155; }
+h1 { font-size: 32px; font-weight: 700; color: #f1f5f9; letter-spacing: -0.02em; margin-bottom: 6px; }
+.subtitle { color: #94a3b8; font-size: 13px; }
+.hero-card { display: block; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-left: 4px solid #3b82f6; border-radius: 14px; padding: 26px; text-decoration: none; color: inherit; transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s; margin-bottom: 28px; }
+.hero-card:hover { transform: translateY(-3px); border-color: #3b82f6; box-shadow: 0 12px 32px rgba(59, 130, 246, 0.15); }
+.hero-empty { border-left-color: #64748b; text-align: center; }
+.hero-empty .hero-emoji { font-size: 48px; margin-bottom: 12px; }
+.hero-empty p { color: #94a3b8; font-size: 13px; margin-top: 8px; }
+.hero-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+.hero-emoji { font-size: 32px; margin-bottom: 4px; }
+.hero-card h2 { font-size: 18px; font-weight: 700; color: #f1f5f9; }
+.hero-mode { font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; letter-spacing: 0.04em; white-space: nowrap; }
+.mode-good { background: #064e3b; color: #6ee7b7; }
+.mode-warn { background: #78350f; color: #fbbf24; }
+.mode-bad { background: #7f1d1d; color: #fca5a5; }
+.hero-stats { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.stat-big { font-size: 56px; font-weight: 700; color: #f1f5f9; line-height: 1; letter-spacing: -0.02em; }
+.stat-label { color: #94a3b8; font-size: 14px; }
+.stat-breakdown { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
+.stat-breakdown span { margin-right: 6px; padding: 2px 7px; border-radius: 4px; font-weight: 600; }
+.b-qw { background: #1e3a8a; color: #dbeafe; }
+.b-ph { background: #7c2d12; color: #fed7aa; }
+.b-wl { background: #334155; color: #cbd5e1; }
+.market-strip { font-size: 12px; color: #cbd5e1; padding: 10px 14px; background: #0f172a; border-radius: 8px; margin-bottom: 16px; }
+.market-strip strong { color: #f1f5f9; }
+.hero-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #334155; padding-top: 14px; flex-wrap: wrap; gap: 8px; }
+.hero-updated { font-size: 11px; color: #64748b; }
+.hero-cta { font-size: 14px; color: #60a5fa; font-weight: 600; }
+.archives { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
+.archives h3 { font-size: 14px; font-weight: 600; color: #f1f5f9; margin-bottom: 14px; }
+.archive-list { display: flex; flex-direction: column; gap: 4px; }
+.archive-item { display: block; padding: 10px 12px; background: #0f172a; border-radius: 6px; color: #cbd5e1; text-decoration: none; font-size: 13px; transition: background 0.1s, color 0.1s; border: 1px solid transparent; }
+.archive-item:hover { background: #334155; color: #f1f5f9; border-color: #475569; }
+footer { text-align: center; margin-top: 32px; color: #64748b; font-size: 11px; }
+@media (max-width: 600px) { body { padding: 16px 12px; } h1 { font-size: 26px; } .hero-card { padding: 20px; } .stat-big { font-size: 44px; } }
+</style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🎯 Premium Hunter</h1>
+        <div class="subtitle">Earnings IV-crush scanner · Updated Sun Apr 26, 2026 · 07:28 AM</div>
+    </header>
+    
+        <a href="latest.html" class="hero-card">
+            <div class="hero-header">
+                <div><div class="hero-emoji">📊</div><h2>Latest Report</h2></div>
+                <div class="hero-mode mode-good">🚦 NORMAL</div>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-big">20</div>
+                <div class="stat-label">Top Picks</div>
+            </div>
+            <div class="stat-breakdown"><span class="b-qw">11 QW</span> · <span class="b-ph">9 PH</span> · <span class="b-wl">6 WL</span></div>
+            <div class="market-strip">VIX <strong>18.7</strong> · SPY <strong>$713.94</strong></div>
+            <div class="hero-footer">
+                <span class="hero-updated">Sun Apr 26 · 07:28 AM UTC</span>
+                <span class="hero-cta">Open Report →</span>
+            </div>
+        </a>
+        
+    <section class="archives"><h3>📁 Archive — Last 1 reports</h3><div class="archive-list"><a href="archive/2026-04-26.html" class="archive-item">Sun Apr 26, 2026</a></div></section>
+    <footer>Auto-updates after each scan · Add to home screen for app-like access</footer>
+</div>
+</body>
+</html>
