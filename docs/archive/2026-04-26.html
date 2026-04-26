@@ -304,6 +304,169 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
   .put-row { grid-template-columns: 1fr; gap: 6px; text-align: left; }
   .put-row > * { text-align: left !important; }
 }
+/* ============================================================
+   v18 CARD STYLES — comprehensive overrides
+   ============================================================ */
+.pick-v18 { position: relative; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 12px; overflow: hidden; display: flex; margin-bottom: 12px; }
+.pick-v18 .tag-side { background: #c2410c; color: #fff7ed; writing-mode: vertical-rl; transform: rotate(180deg); padding: 14px 6px; font-size: 12px; font-weight: 500; letter-spacing: 0.15em; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.pick-v18 .pick-body { flex: 1; padding: 16px 18px; min-width: 0; }
+
+/* Card header */
+.pick-v18 .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 18px; flex-wrap: wrap; }
+.pick-v18 .header-left { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.pick-v18 .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.pick-v18 .card-ticker { color: #c4b5fd; font-size: 26px; font-weight: 500; text-decoration: none; letter-spacing: -0.02em; line-height: 1; }
+.pick-v18 .card-ticker:hover { text-decoration: underline; }
+.pick-v18 .timing-icon { background: #fbbf24; color: #422006; padding: 4px 8px; border-radius: 50%; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; }
+.pick-v18 .timing-icon.amc { background: #6d28d9; color: #ddd6fe; }
+.pick-v18 .timing-icon.tbd { background: #475569; color: #cbd5e1; }
+.pick-v18 .score-block { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.pick-v18 .score-label { font-size: 9px; text-transform: uppercase; font-weight: 500; letter-spacing: 0.04em; color: #64748b; }
+.pick-v18 .score-claude-label { color: #c4b5fd; }
+.pick-v18 .bargain-label { color: #f9a8d4; }
+.pick-v18 .score-badge { font-size: 19px; font-weight: 500; padding: 5px 14px; border-radius: 6px; line-height: 1; display: inline-flex; align-items: center; }
+.pick-v18 .score-mine { background: #1e293b; border: 1px solid #475569; color: #f1f5f9; }
+.pick-v18 .score-claude { background: #2e1065; border: 1px solid #7c3aed; color: #ddd6fe; }
+.pick-v18 .bargain-badge { background: #500724; border: 1px solid #be185d; color: #fce7f3; font-size: 17px; padding: 5px 12px; gap: 5px; }
+.pick-v18 .score-sep { color: #475569; font-size: 16px; }
+.pick-v18 .company-name { color: #f1f5f9; font-size: 16px; font-weight: 500; }
+.pick-v18 .company-price { color: #cbd5e1; font-size: 15px; font-weight: 500; }
+
+/* Company + Claude row */
+.pick-v18 .company-claude-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.pick-v18 .company-box { background: #0c2d1a; border: 1px solid #166534; border-radius: 8px; padding: 12px 14px; }
+.pick-v18 .company-box .box-label { color: #6ee7b7; }
+.pick-v18 .claude-box { background: #1e1b4b; border: 1px solid #4c1d95; border-radius: 8px; padding: 12px 14px; }
+.pick-v18 .claude-box .box-label { color: #c4b5fd; }
+.pick-v18 .box-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.pick-v18 .box-label-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.pick-v18 .box-text { color: #d1fae5; font-size: 12px; line-height: 1.55; margin: 8px 0 10px 0; }
+.pick-v18 .claude-c { width: 18px; height: 18px; background: #6d28d9; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #f5f3ff; font-size: 9px; font-weight: 600; flex-shrink: 0; }
+.pick-v18 .claude-tag { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 500; margin-left: auto; }
+.pick-v18 .tag-safe { background: #064e3b; color: #6ee7b7; }
+.pick-v18 .tag-watch { background: #78350f; color: #fbbf24; }
+.pick-v18 .tag-skip { background: #7f1d1d; color: #fca5a5; }
+.pick-v18 .claude-bullets { display: flex; flex-direction: column; gap: 4px; }
+.pick-v18 .claude-bullet { display: flex; gap: 7px; align-items: flex-start; font-size: 12px; line-height: 1.45; }
+.pick-v18 .bullet-good > span:first-child { color: #34d399; }
+.pick-v18 .bullet-good > span:last-child { color: #d1fae5; }
+.pick-v18 .bullet-warn > span:first-child { color: #fbbf24; }
+.pick-v18 .bullet-warn > span:last-child { color: #fde68a; }
+.pick-v18 .bullet-bad > span:first-child { color: #f87171; }
+.pick-v18 .bullet-bad > span:last-child { color: #fecaca; }
+
+/* Fundamentals */
+.pick-v18 .fund-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 8px; border-top: 1px dashed #166534; margin-top: 8px; }
+.pick-v18 .fund-check { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #d1fae5; }
+.pick-v18 .fund-tick { color: #34d399; font-size: 11px; }
+.pick-v18 .fund-tilde { color: #fbbf24; font-size: 11px; }
+.pick-v18 .fund-cross { color: #f87171; font-size: 11px; }
+.pick-v18 .fund-warn { color: #fde68a; }
+.pick-v18 .fund-bad { color: #fca5a5; }
+.pick-v18 .fund-na { color: #94a3b8; }
+
+/* Put rows — INLINE GRID */
+.pick-v18 .put-row { display: grid; grid-template-columns: 110px 80px 1fr 50px 70px; gap: 10px; align-items: center; background: #0f172a; border: 1px solid #4c1d95; border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; }
+.pick-v18 .put-row-empty { display: block; text-align: center; color: #64748b; font-size: 12px; padding: 10px; }
+.pick-v18 .put-tag { background: #2e1065; color: #ddd6fe; font-size: 10px; font-weight: 500; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.06em; text-align: center; line-height: 1.2; }
+.pick-v18 .put-strike { color: #60a5fa; font-size: 22px; font-weight: 500; letter-spacing: -0.015em; }
+.pick-v18 .put-meta { color: #cbd5e1; font-size: 13px; font-weight: 400; }
+.pick-v18 .put-qty { color: #fbbf24; font-size: 15px; font-weight: 500; text-align: center; }
+.pick-v18 .put-credit { color: #34d399; font-size: 16px; font-weight: 500; text-align: right; }
+
+/* Hero stats */
+.pick-v18 .hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 14px 0; }
+.pick-v18 .hero-stat { background: #0f172a; border: 1px solid #34d399; border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+.pick-v18 .hero-icon { width: 30px; height: 30px; background: #064e3b; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.pick-v18 .hero-stat > div:not(.hero-icon) { display: flex; flex-direction: column; gap: 0; }
+.pick-v18 .hero-stat .hero-label { font-size: 9px; color: #6ee7b7; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; }
+.pick-v18 .hero-stat .hero-value { font-size: 22px; font-weight: 500; color: #34d399; line-height: 1.1; }
+.pick-v18 .hero-edge-good { border-color: #6ee7b7; }
+.pick-v18 .hero-edge-ok { border-color: #fbbf24; }
+.pick-v18 .hero-edge-ok .hero-value { color: #fbbf24; }
+.pick-v18 .hero-gap-warn { border-color: #fbbf24; }
+.pick-v18 .hero-gap-warn .hero-value { color: #fbbf24; }
+.pick-v18 .hero-gap-bad { border-color: #f87171; }
+.pick-v18 .hero-gap-bad .hero-value { color: #f87171; }
+.pick-v18 .hero-gap-na { border-color: #475569; }
+.pick-v18 .hero-gap-na .hero-value { color: #94a3b8; }
+
+/* Chart + indicators row */
+.pick-v18 .chart-indicators-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.pick-v18 .chart-news-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pick-v18 svg.chart-svg { width: 100%; height: auto; max-height: 260px; background: #0f172a; border: 1px solid #1e293b; border-radius: 6px; display: block; }
+.pick-v18 .chart-empty { background: #0f172a; border: 1px solid #1e293b; border-radius: 6px; padding: 60px; text-align: center; color: #64748b; font-size: 12px; }
+
+/* News */
+.pick-v18 .news-box { background: #082f49; border: 1px solid #1e40af; border-radius: 8px; padding: 12px 14px; }
+.pick-v18 .news-box .box-label { color: #93c5fd; margin-bottom: 8px; display: inline-block; }
+.pick-v18 .news-list { display: flex; flex-direction: column; gap: 6px; }
+.pick-v18 .news-item { display: flex; gap: 8px; align-items: baseline; font-size: 11px; line-height: 1.4; }
+.pick-v18 .news-icon { font-size: 11px; flex-shrink: 0; }
+.pick-v18 .news-pos { color: #34d399; }
+.pick-v18 .news-neg { color: #f87171; }
+.pick-v18 .news-neu { color: #94a3b8; }
+.pick-v18 .news-title { color: #cbd5e1; flex: 1; }
+.pick-v18 .news-title-link { color: #cbd5e1; flex: 1; text-decoration: none; }
+.pick-v18 .news-title-link:hover { color: #f1f5f9; text-decoration: underline; }
+.pick-v18 .news-date { color: #64748b; font-size: 9px; white-space: nowrap; flex-shrink: 0; }
+.pick-v18 .news-empty { color: #64748b; font-size: 11px; font-style: italic; }
+
+/* Indicator panel (right column) */
+.pick-v18 .indicators-col { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pick-v18 .ind-block { }
+.pick-v18 .ind-label { color: #64748b; font-size: 9px; text-transform: uppercase; font-weight: 500; letter-spacing: 0.04em; }
+.pick-v18 .ind-label-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+.pick-v18 .ind-val { color: #cbd5e1; font-size: 10px; font-weight: 500; }
+
+/* 52w bar */
+.pick-v18 .bar-52w { position: relative; height: 6px; background: #1e293b; border-radius: 3px; margin-top: 5px; }
+.pick-v18 .bar-fill { position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: linear-gradient(90deg, #f87171 0%, #fbbf24 50%, #34d399 100%); opacity: 0.35; border-radius: 3px; }
+.pick-v18 .bar-labels { display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: #94a3b8; }
+.pick-v18 .bar-current { color: #f1f5f9; font-weight: 500; }
+
+/* Markers (universal) */
+.pick-v18 .bar-marker { position: absolute; top: -2px; width: 8px; height: 10px; background: #f1f5f9; border-radius: 2px; z-index: 2; }
+.pick-v18 .bar-marker-tall { top: 4px; bottom: 4px; height: auto; }
+
+/* Support floors LADDER (clean, no lines through numbers) */
+.pick-v18 .ladder { display: flex; flex-direction: column; gap: 7px; padding: 8px 0; margin-top: 4px; }
+.pick-v18 .ladder-row { display: grid; grid-template-columns: 60px 14px 1fr; gap: 10px; align-items: center; }
+.pick-v18 .ladder-label { text-align: right; font-size: 9px; text-transform: uppercase; font-weight: 500; }
+.pick-v18 .ladder-dot { width: 10px; height: 10px; border-radius: 50%; }
+.pick-v18 .ladder-value { font-size: 11px; font-weight: 500; }
+.pick-v18 .ladder-pct { color: #94a3b8; font-size: 10px; font-weight: 400; }
+.pick-v18 .stress-test { margin-top: 10px; padding: 8px 10px; background: #2e1065; border-left: 2px solid #a855f7; border-radius: 4px; color: #e9d5ff; font-size: 10px; line-height: 1.5; }
+.pick-v18 .stress-test strong { color: #f5f3ff; }
+
+/* 2x2 grid */
+.pick-v18 .ind-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 8px; border-top: 1px dashed #1e293b; }
+.pick-v18 .ind-mini { background: #0c1929; border-radius: 5px; padding: 6px 8px; }
+.pick-v18 .mini-label { color: #64748b; font-size: 8px; text-transform: uppercase; font-weight: 500; margin-bottom: 2px; }
+.pick-v18 .mini-val { color: #cbd5e1; font-size: 12px; font-weight: 500; }
+
+/* Signals row */
+.pick-v18 .signals-row { display: flex; align-items: center; gap: 16px; padding: 8px 14px; background: #0c1929; border: 1px dashed #1e293b; border-radius: 6px; font-size: 11px; color: #cbd5e1; margin-bottom: 10px; flex-wrap: wrap; }
+.pick-v18 .sig-chip { display: inline-flex; align-items: center; gap: 5px; }
+.pick-v18 .sig-dot { color: #34d399; }
+
+/* Card footer */
+.pick-v18 .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid #1e293b; flex-wrap: wrap; gap: 8px; }
+.pick-v18 .card-footer .fire-time { color: #fb923c; font-size: 13px; font-weight: 500; padding: 0; background: none; }
+.pick-v18 .verify-links { color: #64748b; font-size: 11px; }
+.pick-v18 .verify-links a { color: #60a5fa; text-decoration: none; }
+.pick-v18 .verify-links a:hover { text-decoration: underline; }
+.pick-v18 .fire-warning { background: #78350f; border: 1px solid #f59e0b; color: #fbbf24; padding: 6px 10px; border-radius: 4px; margin-bottom: 8px; font-size: 11px; font-weight: 500; }
+
+/* Mobile responsive */
+@media (max-width: 720px) {
+  .pick-v18 .company-claude-row,
+  .pick-v18 .hero-row,
+  .pick-v18 .chart-indicators-row { grid-template-columns: 1fr; }
+  .pick-v18 .put-row { grid-template-columns: 1fr; gap: 6px; }
+  .pick-v18 .put-credit { text-align: left; }
+  .pick-v18 .put-qty { text-align: left; }
+}
 </style>
 </head>
 <body>
@@ -517,19 +680,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">What To Expect From Domino’s (DPZ) Q1 Earnings</span>
+                <a href="https://finance.yahoo.com/economy/policy/articles/omaha-restaurant-owner-drops-delivery-102500179.html" target="_blank" rel="noopener" class="news-title-link">Omaha restaurant owner drops delivery apps after paying $188K for 1 year of fees. Is in-ho...</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Domino’s Pizza Shareholders Reelect Directors, Back Pay Plan; Reject Independent Chair Pro...</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/expect-domino-dpz-q1-earnings-042901922.html" target="_blank" rel="noopener" class="news-title-link">What To Expect From Domino’s (DPZ) Q1 Earnings</a>
+                <span class="news-date">Apr 26</span>
+            </div><div class="news-item">
+                <span class="news-icon news-neu">●</span>
+                <a href="https://www.marketbeat.com/instant-alerts/dominos-pizza-shareholders-reelect-directors-back-pay-plan-reject-independent-chair-proposal-2026-04-24/?utm_source=yahoofinance&utm_medium=yahoofinance" target="_blank" rel="noopener" class="news-title-link">Domino’s Pizza Shareholders Reelect Directors, Back Pay Plan; Reject Independent Chair Pro...</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Mag 7 Earnings, Fed Meeting: What to Watch in the Next Week</span>
-                <span class="news-date">Apr 24</span>
-            </div><div class="news-item">
-                <span class="news-icon news-neg">▼</span>
-                <span class="news-title">How The Domino’s Pizza (DPZ) Investment Story Is Shifting As Analysts Recut Valuation Assu...</span>
+                <a href="https://www.wsj.com/livecoverage/stock-market-today-dow-sp-500-nasdaq-04-24-2026/card/mag-7-earnings-fed-meeting-what-to-watch-in-the-next-week-McjZjsIaRuOa4Z3Qwels?siteid=yhoof2&yptr=yahoo" target="_blank" rel="noopener" class="news-title-link">Mag 7 Earnings, Fed Meeting: What to Watch in the Next Week</a>
                 <span class="news-date">Apr 24</span>
             </div></div>
                         </div>
@@ -734,8 +897,8 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                 <stop offset="100%" stop-color="#34d399" stop-opacity="0"/>
             </linearGradient>
         </defs>
-        <polyline points="8.0,183.8 9.5,177.7 11.1,170.6 12.6,156.6 14.1,166.2 15.7,160.6 17.2,163.2 18.8,155.4 20.3,158.7 21.8,162.3 23.4,162.3 24.9,170.0 26.4,174.4 28.0,178.3 29.5,163.9 31.0,157.4 32.6,153.4 34.1,154.5 35.6,160.5 37.2,168.4 38.7,165.9 40.3,163.7 41.8,168.4 43.3,165.8 44.9,157.8 46.4,156.0 47.9,159.5 49.5,167.0 51.0,166.2 52.5,159.9 54.1,161.8 55.6,155.7 57.2,160.6 58.7,168.0 60.2,169.9 61.8,176.4 63.3,184.6 64.8,186.9 66.4,186.5 67.9,178.1 69.4,174.7 71.0,181.2 72.5,181.4 74.0,178.8 75.6,166.6 77.1,161.4 78.7,162.5 80.2,163.0 81.7,172.5 83.3,169.2 84.8,175.0 86.3,173.7 87.9,179.0 89.4,179.5 90.9,183.6 92.5,183.8 94.0,187.6 95.6,189.0 97.1,167.8 98.6,161.7 100.2,163.2 101.7,160.1 103.2,160.1 104.8,169.4 106.3,164.9 107.8,166.3 109.4,164.3 110.9,162.7 112.4,161.8 114.0,165.4 115.5,169.6 117.1,161.8 118.6,159.2 120.1,158.9 121.7,158.0 123.2,152.0 124.7,154.7 126.3,145.2 127.8,143.3 129.3,136.2 130.9,134.6 132.4,135.0 134.0,142.6 135.5,145.3 137.0,148.8 138.6,144.8 140.1,149.2 141.6,145.3 143.2,150.9 144.7,151.6 146.2,146.0 147.8,143.4 149.3,157.1 150.8,153.8 152.4,154.9 153.9,146.5 155.5,148.7 157.0,150.0 158.5,151.6 160.1,145.6 161.6,152.5 163.1,155.0 164.7,159.1 166.2,156.7 167.7,158.9 169.3,156.7 170.8,153.3 172.4,158.0 173.9,148.9 175.4,150.5 177.0,156.0 178.5,152.5 180.0,181.3 181.6,181.8 183.1,182.9 184.6,189.2 186.2,193.0 187.7,194.3 189.2,183.8 190.8,186.0 192.3,186.3 193.9,183.8 195.4,180.5 196.9,187.1 198.5,193.6 200.0,212.0 201.5,206.5 203.1,201.1 204.6,199.9 206.1,188.3 207.7,204.7 209.2,194.4 210.8,198.0 212.3,199.9 213.8,195.1 215.4,193.4 216.9,190.6 218.4,193.0 220.0,181.8 221.5,180.5 223.0,176.4 224.6,177.1 226.1,177.8 227.6,171.6 229.2,175.4 230.7,181.0 232.3,174.9 233.8,188.3 235.3,183.3 236.9,179.5 238.4,176.4 239.9,181.3 241.5,183.0 243.0,182.2 244.5,174.5 246.1,168.8 247.6,174.0 249.2,189.2 250.7,192.1 252.2,188.1 253.8,179.3 255.3,180.5 256.8,181.2 258.4,179.5 259.9,185.6 261.4,193.4 263.0,191.3 264.5,192.1 266.0,186.8 267.6,184.7 269.1,184.7 270.7,181.8 272.2,181.4 273.7,184.2 275.3,188.0 276.8,187.1 278.3,189.3 279.9,183.5 281.4,185.0 282.9,184.0 284.5,195.1 286.0,184.2 287.6,190.4 289.1,196.5 290.6,194.2 292.2,192.0 293.7,188.8 295.2,188.3 296.8,187.0 298.3,191.0 299.8,189.8 301.4,184.4 302.9,121.6 304.4,120.4 306.0,98.5 307.5,88.3 309.1,87.1 310.6,97.7 312.1,88.2 313.7,83.3 315.2,62.2 316.7,55.6 318.3,61.6 319.8,62.7 321.3,74.4 322.9,66.6 324.4,58.4 326.0,52.7 327.5,50.3 329.0,58.7 330.6,63.2 332.1,46.6 333.6,48.7 335.2,36.8 336.7,32.4 338.2,32.7 339.8,33.5 341.3,42.4 342.8,38.9 344.4,39.3 345.9,40.0 347.5,30.0 349.0,35.5 350.5,41.5 352.1,53.9 353.6,55.4 355.1,48.7 356.7,40.7 358.2,36.3 359.7,43.5 361.3,38.5 362.8,44.3 364.4,44.4 365.9,45.8 367.4,56.6 369.0,56.4 370.5,59.8 372.0,66.8 373.6,74.6 375.1,78.1 376.6,92.0 378.2,100.4 379.7,99.6 381.2,105.7 382.8,82.0 384.3,85.1 385.9,86.6 387.4,88.9 388.9,92.8 390.5,76.0 392.0,87.4" fill="none" stroke="#34d399" stroke-width="2.2"/>
-        <polygon points="8.0,183.8 9.5,177.7 11.1,170.6 12.6,156.6 14.1,166.2 15.7,160.6 17.2,163.2 18.8,155.4 20.3,158.7 21.8,162.3 23.4,162.3 24.9,170.0 26.4,174.4 28.0,178.3 29.5,163.9 31.0,157.4 32.6,153.4 34.1,154.5 35.6,160.5 37.2,168.4 38.7,165.9 40.3,163.7 41.8,168.4 43.3,165.8 44.9,157.8 46.4,156.0 47.9,159.5 49.5,167.0 51.0,166.2 52.5,159.9 54.1,161.8 55.6,155.7 57.2,160.6 58.7,168.0 60.2,169.9 61.8,176.4 63.3,184.6 64.8,186.9 66.4,186.5 67.9,178.1 69.4,174.7 71.0,181.2 72.5,181.4 74.0,178.8 75.6,166.6 77.1,161.4 78.7,162.5 80.2,163.0 81.7,172.5 83.3,169.2 84.8,175.0 86.3,173.7 87.9,179.0 89.4,179.5 90.9,183.6 92.5,183.8 94.0,187.6 95.6,189.0 97.1,167.8 98.6,161.7 100.2,163.2 101.7,160.1 103.2,160.1 104.8,169.4 106.3,164.9 107.8,166.3 109.4,164.3 110.9,162.7 112.4,161.8 114.0,165.4 115.5,169.6 117.1,161.8 118.6,159.2 120.1,158.9 121.7,158.0 123.2,152.0 124.7,154.7 126.3,145.2 127.8,143.3 129.3,136.2 130.9,134.6 132.4,135.0 134.0,142.6 135.5,145.3 137.0,148.8 138.6,144.8 140.1,149.2 141.6,145.3 143.2,150.9 144.7,151.6 146.2,146.0 147.8,143.4 149.3,157.1 150.8,153.8 152.4,154.9 153.9,146.5 155.5,148.7 157.0,150.0 158.5,151.6 160.1,145.6 161.6,152.5 163.1,155.0 164.7,159.1 166.2,156.7 167.7,158.9 169.3,156.7 170.8,153.3 172.4,158.0 173.9,148.9 175.4,150.5 177.0,156.0 178.5,152.5 180.0,181.3 181.6,181.8 183.1,182.9 184.6,189.2 186.2,193.0 187.7,194.3 189.2,183.8 190.8,186.0 192.3,186.3 193.9,183.8 195.4,180.5 196.9,187.1 198.5,193.6 200.0,212.0 201.5,206.5 203.1,201.1 204.6,199.9 206.1,188.3 207.7,204.7 209.2,194.4 210.8,198.0 212.3,199.9 213.8,195.1 215.4,193.4 216.9,190.6 218.4,193.0 220.0,181.8 221.5,180.5 223.0,176.4 224.6,177.1 226.1,177.8 227.6,171.6 229.2,175.4 230.7,181.0 232.3,174.9 233.8,188.3 235.3,183.3 236.9,179.5 238.4,176.4 239.9,181.3 241.5,183.0 243.0,182.2 244.5,174.5 246.1,168.8 247.6,174.0 249.2,189.2 250.7,192.1 252.2,188.1 253.8,179.3 255.3,180.5 256.8,181.2 258.4,179.5 259.9,185.6 261.4,193.4 263.0,191.3 264.5,192.1 266.0,186.8 267.6,184.7 269.1,184.7 270.7,181.8 272.2,181.4 273.7,184.2 275.3,188.0 276.8,187.1 278.3,189.3 279.9,183.5 281.4,185.0 282.9,184.0 284.5,195.1 286.0,184.2 287.6,190.4 289.1,196.5 290.6,194.2 292.2,192.0 293.7,188.8 295.2,188.3 296.8,187.0 298.3,191.0 299.8,189.8 301.4,184.4 302.9,121.6 304.4,120.4 306.0,98.5 307.5,88.3 309.1,87.1 310.6,97.7 312.1,88.2 313.7,83.3 315.2,62.2 316.7,55.6 318.3,61.6 319.8,62.7 321.3,74.4 322.9,66.6 324.4,58.4 326.0,52.7 327.5,50.3 329.0,58.7 330.6,63.2 332.1,46.6 333.6,48.7 335.2,36.8 336.7,32.4 338.2,32.7 339.8,33.5 341.3,42.4 342.8,38.9 344.4,39.3 345.9,40.0 347.5,30.0 349.0,35.5 350.5,41.5 352.1,53.9 353.6,55.4 355.1,48.7 356.7,40.7 358.2,36.3 359.7,43.5 361.3,38.5 362.8,44.3 364.4,44.4 365.9,45.8 367.4,56.6 369.0,56.4 370.5,59.8 372.0,66.8 373.6,74.6 375.1,78.1 376.6,92.0 378.2,100.4 379.7,99.6 381.2,105.7 382.8,82.0 384.3,85.1 385.9,86.6 387.4,88.9 388.9,92.8 390.5,76.0 392.0,87.4 392.0,212.0 8.0,212.0" fill="url(#pg-VZ)"/>
+        <polyline points="8.0,183.8 9.5,177.7 11.1,170.6 12.6,156.6 14.1,166.2 15.7,160.6 17.2,163.2 18.8,155.4 20.3,158.7 21.8,162.3 23.4,162.3 24.9,170.0 26.4,174.4 28.0,178.3 29.5,163.9 31.0,157.4 32.6,153.4 34.1,154.5 35.6,160.5 37.2,168.4 38.7,165.9 40.3,163.7 41.8,168.4 43.3,165.8 44.9,157.8 46.4,156.0 47.9,159.5 49.5,167.0 51.0,166.2 52.5,159.9 54.1,161.8 55.6,155.7 57.2,160.6 58.7,168.0 60.2,169.9 61.8,176.4 63.3,184.6 64.8,186.9 66.4,186.5 67.9,178.1 69.4,174.7 71.0,181.2 72.5,181.4 74.0,178.8 75.6,166.6 77.1,161.4 78.7,162.5 80.2,163.0 81.7,172.5 83.3,169.2 84.8,175.0 86.3,173.7 87.9,179.0 89.4,179.5 90.9,183.6 92.5,183.8 94.0,187.6 95.6,189.0 97.1,167.8 98.6,161.7 100.2,163.2 101.7,160.1 103.2,160.1 104.8,169.4 106.3,164.9 107.8,166.3 109.4,164.3 110.9,162.7 112.4,161.8 114.0,165.4 115.5,169.6 117.1,161.8 118.6,159.2 120.1,158.9 121.7,158.0 123.2,152.0 124.7,154.7 126.3,145.2 127.8,143.3 129.3,136.2 130.9,134.6 132.4,135.0 134.0,142.6 135.5,145.3 137.0,148.8 138.6,144.8 140.1,149.2 141.6,145.3 143.2,150.9 144.7,151.6 146.2,146.0 147.8,143.4 149.3,157.1 150.8,153.8 152.4,154.9 153.9,146.5 155.5,148.7 157.0,150.0 158.5,151.6 160.1,145.6 161.6,152.5 163.1,155.0 164.7,159.1 166.2,156.7 167.7,158.9 169.3,156.7 170.8,153.3 172.4,158.0 173.9,148.9 175.4,150.5 177.0,156.0 178.5,152.5 180.0,181.3 181.6,181.8 183.1,182.8 184.6,189.2 186.2,193.0 187.7,194.3 189.2,183.8 190.8,186.0 192.3,186.3 193.9,183.8 195.4,180.5 196.9,187.1 198.5,193.6 200.0,212.0 201.5,206.5 203.1,201.1 204.6,199.9 206.1,188.3 207.7,204.7 209.2,194.4 210.8,198.0 212.3,199.9 213.8,195.1 215.4,193.4 216.9,190.6 218.4,193.0 220.0,181.8 221.5,180.5 223.0,176.4 224.6,177.1 226.1,177.8 227.6,171.6 229.2,175.4 230.7,181.0 232.3,174.9 233.8,188.3 235.3,183.3 236.9,179.5 238.4,176.4 239.9,181.3 241.5,183.0 243.0,182.2 244.5,174.5 246.1,168.8 247.6,174.0 249.2,189.2 250.7,192.1 252.2,188.1 253.8,179.3 255.3,180.5 256.8,181.2 258.4,179.5 259.9,185.6 261.4,193.4 263.0,191.3 264.5,192.1 266.0,186.8 267.6,184.7 269.1,184.7 270.7,181.8 272.2,181.4 273.7,184.2 275.3,188.0 276.8,187.1 278.3,189.3 279.9,183.5 281.4,185.0 282.9,184.0 284.5,195.1 286.0,184.2 287.6,190.4 289.1,196.5 290.6,194.2 292.2,192.0 293.7,188.8 295.2,188.3 296.8,187.0 298.3,191.0 299.8,189.8 301.4,184.4 302.9,121.6 304.4,120.4 306.0,98.5 307.5,88.3 309.1,87.1 310.6,97.7 312.1,88.2 313.7,83.3 315.2,62.2 316.7,55.6 318.3,61.6 319.8,62.7 321.3,74.4 322.9,66.6 324.4,58.4 326.0,52.7 327.5,50.3 329.0,58.7 330.6,63.2 332.1,46.6 333.6,48.7 335.2,36.8 336.7,32.4 338.2,32.7 339.8,33.5 341.3,42.4 342.8,38.9 344.4,39.3 345.9,40.0 347.5,30.0 349.0,35.5 350.5,41.5 352.1,53.9 353.6,55.4 355.1,48.7 356.7,40.7 358.2,36.3 359.7,43.5 361.3,38.5 362.8,44.3 364.4,44.4 365.9,45.8 367.4,56.6 369.0,56.4 370.5,59.8 372.0,66.8 373.6,74.6 375.1,78.1 376.6,92.0 378.2,100.4 379.7,99.6 381.2,105.7 382.8,82.0 384.3,85.1 385.9,86.6 387.4,88.9 388.9,92.8 390.5,76.0 392.0,87.4" fill="none" stroke="#34d399" stroke-width="2.2"/>
+        <polygon points="8.0,183.8 9.5,177.7 11.1,170.6 12.6,156.6 14.1,166.2 15.7,160.6 17.2,163.2 18.8,155.4 20.3,158.7 21.8,162.3 23.4,162.3 24.9,170.0 26.4,174.4 28.0,178.3 29.5,163.9 31.0,157.4 32.6,153.4 34.1,154.5 35.6,160.5 37.2,168.4 38.7,165.9 40.3,163.7 41.8,168.4 43.3,165.8 44.9,157.8 46.4,156.0 47.9,159.5 49.5,167.0 51.0,166.2 52.5,159.9 54.1,161.8 55.6,155.7 57.2,160.6 58.7,168.0 60.2,169.9 61.8,176.4 63.3,184.6 64.8,186.9 66.4,186.5 67.9,178.1 69.4,174.7 71.0,181.2 72.5,181.4 74.0,178.8 75.6,166.6 77.1,161.4 78.7,162.5 80.2,163.0 81.7,172.5 83.3,169.2 84.8,175.0 86.3,173.7 87.9,179.0 89.4,179.5 90.9,183.6 92.5,183.8 94.0,187.6 95.6,189.0 97.1,167.8 98.6,161.7 100.2,163.2 101.7,160.1 103.2,160.1 104.8,169.4 106.3,164.9 107.8,166.3 109.4,164.3 110.9,162.7 112.4,161.8 114.0,165.4 115.5,169.6 117.1,161.8 118.6,159.2 120.1,158.9 121.7,158.0 123.2,152.0 124.7,154.7 126.3,145.2 127.8,143.3 129.3,136.2 130.9,134.6 132.4,135.0 134.0,142.6 135.5,145.3 137.0,148.8 138.6,144.8 140.1,149.2 141.6,145.3 143.2,150.9 144.7,151.6 146.2,146.0 147.8,143.4 149.3,157.1 150.8,153.8 152.4,154.9 153.9,146.5 155.5,148.7 157.0,150.0 158.5,151.6 160.1,145.6 161.6,152.5 163.1,155.0 164.7,159.1 166.2,156.7 167.7,158.9 169.3,156.7 170.8,153.3 172.4,158.0 173.9,148.9 175.4,150.5 177.0,156.0 178.5,152.5 180.0,181.3 181.6,181.8 183.1,182.8 184.6,189.2 186.2,193.0 187.7,194.3 189.2,183.8 190.8,186.0 192.3,186.3 193.9,183.8 195.4,180.5 196.9,187.1 198.5,193.6 200.0,212.0 201.5,206.5 203.1,201.1 204.6,199.9 206.1,188.3 207.7,204.7 209.2,194.4 210.8,198.0 212.3,199.9 213.8,195.1 215.4,193.4 216.9,190.6 218.4,193.0 220.0,181.8 221.5,180.5 223.0,176.4 224.6,177.1 226.1,177.8 227.6,171.6 229.2,175.4 230.7,181.0 232.3,174.9 233.8,188.3 235.3,183.3 236.9,179.5 238.4,176.4 239.9,181.3 241.5,183.0 243.0,182.2 244.5,174.5 246.1,168.8 247.6,174.0 249.2,189.2 250.7,192.1 252.2,188.1 253.8,179.3 255.3,180.5 256.8,181.2 258.4,179.5 259.9,185.6 261.4,193.4 263.0,191.3 264.5,192.1 266.0,186.8 267.6,184.7 269.1,184.7 270.7,181.8 272.2,181.4 273.7,184.2 275.3,188.0 276.8,187.1 278.3,189.3 279.9,183.5 281.4,185.0 282.9,184.0 284.5,195.1 286.0,184.2 287.6,190.4 289.1,196.5 290.6,194.2 292.2,192.0 293.7,188.8 295.2,188.3 296.8,187.0 298.3,191.0 299.8,189.8 301.4,184.4 302.9,121.6 304.4,120.4 306.0,98.5 307.5,88.3 309.1,87.1 310.6,97.7 312.1,88.2 313.7,83.3 315.2,62.2 316.7,55.6 318.3,61.6 319.8,62.7 321.3,74.4 322.9,66.6 324.4,58.4 326.0,52.7 327.5,50.3 329.0,58.7 330.6,63.2 332.1,46.6 333.6,48.7 335.2,36.8 336.7,32.4 338.2,32.7 339.8,33.5 341.3,42.4 342.8,38.9 344.4,39.3 345.9,40.0 347.5,30.0 349.0,35.5 350.5,41.5 352.1,53.9 353.6,55.4 355.1,48.7 356.7,40.7 358.2,36.3 359.7,43.5 361.3,38.5 362.8,44.3 364.4,44.4 365.9,45.8 367.4,56.6 369.0,56.4 370.5,59.8 372.0,66.8 373.6,74.6 375.1,78.1 376.6,92.0 378.2,100.4 379.7,99.6 381.2,105.7 382.8,82.0 384.3,85.1 385.9,86.6 387.4,88.9 388.9,92.8 390.5,76.0 392.0,87.4 392.0,212.0 8.0,212.0" fill="url(#pg-VZ)"/>
         <line x1="8" y1="212.0" x2="392" y2="212.0" stroke="#1e293b" stroke-width="0.5"/>
         <text x="10" y="20" fill="#64748b" font-size="13" font-weight="600" letter-spacing="0.5">1Y PRICE</text>
         <rect x="324" y="205" width="64" height="16" rx="3" fill="#064e3b"/>
@@ -761,19 +924,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">How To Earn $500 A Month From Verizon Stock Ahead Of Q1 Earnings</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/earn-500-month-verizon-stock-163104441.html" target="_blank" rel="noopener" class="news-title-link">How To Earn $500 A Month From Verizon Stock Ahead Of Q1 Earnings</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">How The Verizon Communications (VZ) Investment Story Is Shifting On Costs Transparency And...</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/verizon-communications-vz-investment-story-130522215.html" target="_blank" rel="noopener" class="news-title-link">How The Verizon Communications (VZ) Investment Story Is Shifting On Costs Transparency And...</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">1 Cash-Producing Stock to Keep an Eye On and 2 We Brush Off</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/1-cash-producing-stock-keep-050923013.html" target="_blank" rel="noopener" class="news-title-link">1 Cash-Producing Stock to Keep an Eye On and 2 We Brush Off</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Is the Cable Era Over? Charter’s Subscriber Slump Reignites Fears of a Fiber and Satellite...</span>
+                <a href="https://www.barrons.com/articles/charter-stock-earnings-price-comcast-90d947d9?siteid=yhoof2&yptr=yahoo" target="_blank" rel="noopener" class="news-title-link">Is the Cable Era Over? Charter’s Subscriber Slump Reignites Fears of a Fiber and Satellite...</a>
                 <span class="news-date">Apr 24</span>
             </div></div>
                         </div>
@@ -1021,19 +1184,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Mag 7 Earnings, Fed Meeting: What to Watch in the Next Week</span>
+                <a href="https://www.wsj.com/livecoverage/stock-market-today-dow-sp-500-nasdaq-04-24-2026/card/mag-7-earnings-fed-meeting-what-to-watch-in-the-next-week-McjZjsIaRuOa4Z3Qwels?siteid=yhoof2&yptr=yahoo" target="_blank" rel="noopener" class="news-title-link">Mag 7 Earnings, Fed Meeting: What to Watch in the Next Week</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Commodity Prices Are Soaring Again. Here Are 3 ETFs to Ride the Trend</span>
+                <a href="https://247wallst.com/investing/2026/04/24/commodity-prices-are-soaring-again-here-are-3-etfs-to-ride-the-trend/" target="_blank" rel="noopener" class="news-title-link">Commodity Prices Are Soaring Again. Here Are 3 ETFs to Ride the Trend</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">JPMorgan Raises Nucor (NUE) Price Target to $212, Sees Tight Supply Supporting Steel Secto...</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/jpmorgan-raises-nucor-nue-price-200347740.html" target="_blank" rel="noopener" class="news-title-link">JPMorgan Raises Nucor (NUE) Price Target to $212, Sees Tight Supply Supporting Steel Secto...</a>
                 <span class="news-date">Apr 23</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">NUE to Report Q1 Earnings: What's in the Cards for the Stock?</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/nue-report-q1-earnings-whats-121500559.html" target="_blank" rel="noopener" class="news-title-link">NUE to Report Q1 Earnings: What's in the Cards for the Stock?</a>
                 <span class="news-date">Apr 23</span>
             </div></div>
                         </div>
@@ -1260,19 +1423,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Cincinnati Financial Earnings: What To Look For From CINF</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/cincinnati-financial-earnings-look-cinf-042101326.html" target="_blank" rel="noopener" class="news-title-link">Cincinnati Financial Earnings: What To Look For From CINF</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">3 Unpopular Stocks We Keep Off Our Radar</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/3-unpopular-stocks-keep-off-222923924.html" target="_blank" rel="noopener" class="news-title-link">3 Unpopular Stocks We Keep Off Our Radar</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">What's in the Cards for Cincinnati Financial This Earnings Season?</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/whats-cards-cincinnati-financial-earnings-134600289.html" target="_blank" rel="noopener" class="news-title-link">What's in the Cards for Cincinnati Financial This Earnings Season?</a>
                 <span class="news-date">Apr 23</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Exploring Analyst Estimates for Cincinnati Financial (CINF) Q1 Earnings, Beyond Revenue an...</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/exploring-analyst-estimates-cincinnati-financial-131502119.html" target="_blank" rel="noopener" class="news-title-link">Exploring Analyst Estimates for Cincinnati Financial (CINF) Q1 Earnings, Beyond Revenue an...</a>
                 <span class="news-date">Apr 22</span>
             </div></div>
                         </div>
@@ -1530,19 +1693,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Visa Validator Role On Tempo Reframes Stablecoin And Card Payment Future</span>
+                <a href="https://finance.yahoo.com/markets/crypto/articles/visa-validator-role-tempo-reframes-230418816.html" target="_blank" rel="noopener" class="news-title-link">Visa Validator Role On Tempo Reframes Stablecoin And Card Payment Future</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">ECB Picks Open European Standards for Digital Euro, Sidelining Visa and Mastercard</span>
+                <a href="https://beincrypto.com/ecb-digital-euro-open-standards/" target="_blank" rel="noopener" class="news-title-link">ECB Picks Open European Standards for Digital Euro, Sidelining Visa and Mastercard</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">.2 Financials Stocks for Long-Term Investors and 1 We Brush Off</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/2-financials-stocks-long-term-053323049.html" target="_blank" rel="noopener" class="news-title-link">.2 Financials Stocks for Long-Term Investors and 1 We Brush Off</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">North Point Sells Out of $7.5 Million Gentex Position in Q1</span>
+                <a href="https://www.fool.com/coverage/filings/2026/04/24/north-point-sells-out-of-usd7-5-million-gentex-position-in-q1/" target="_blank" rel="noopener" class="news-title-link">North Point Sells Out of $7.5 Million Gentex Position in Q1</a>
                 <span class="news-date">Apr 24</span>
             </div></div>
                         </div>
@@ -1766,19 +1929,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">How The Coca-Cola (KO) Investment Narrative Is Shifting With New Targets And Dividend Supp...</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/coca-cola-ko-investment-narrative-041555153.html" target="_blank" rel="noopener" class="news-title-link">How The Coca-Cola (KO) Investment Narrative Is Shifting With New Targets And Dividend Supp...</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">3 Dividend Stocks Built to Last a Lifetime and Pay You the Whole Way</span>
+                <a href="https://www.fool.com/investing/2026/04/25/dividend-stocks-last-lifetime-pay-whole-way/" target="_blank" rel="noopener" class="news-title-link">3 Dividend Stocks Built to Last a Lifetime and Pay You the Whole Way</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Coca-Cola Poised for In-Line Quarterly Print Despite Global Macro Volatility, RBC Says</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/coca-cola-poised-line-quarterly-190722008.html" target="_blank" rel="noopener" class="news-title-link">Coca-Cola Poised for In-Line Quarterly Print Despite Global Macro Volatility, RBC Says</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Coca-Cola (KO) Plans to Invest in South Africa by 2030</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/coca-cola-ko-plans-invest-185212326.html" target="_blank" rel="noopener" class="news-title-link">Coca-Cola (KO) Plans to Invest in South Africa by 2030</a>
                 <span class="news-date">Apr 24</span>
             </div></div>
                         </div>
@@ -2005,19 +2168,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Markel Group’s Berkshire Weekend Spotlight And What The Valuation Suggests</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/markel-group-berkshire-weekend-spotlight-100604669.html" target="_blank" rel="noopener" class="news-title-link">Markel Group’s Berkshire Weekend Spotlight And What The Valuation Suggests</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Old Republic International (ORI) Lags Q1 Earnings and Revenue Estimates</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/old-republic-international-ori-lags-123503070.html" target="_blank" rel="noopener" class="news-title-link">Old Republic International (ORI) Lags Q1 Earnings and Revenue Estimates</a>
                 <span class="news-date">Apr 23</span>
             </div><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">Will Markel Group (MKL) Beat Estimates Again in Its Next Earnings Report?</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/markel-group-mkl-beat-estimates-161004444.html" target="_blank" rel="noopener" class="news-title-link">Will Markel Group (MKL) Beat Estimates Again in Its Next Earnings Report?</a>
                 <span class="news-date">Apr 22</span>
             </div><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">Markel Group (MKL) to Report Q1 Results: Wall Street Expects Earnings Growth</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/markel-group-mkl-report-q1-140015510.html" target="_blank" rel="noopener" class="news-title-link">Markel Group (MKL) to Report Q1 Results: Wall Street Expects Earnings Growth</a>
                 <span class="news-date">Apr 22</span>
             </div></div>
                         </div>
@@ -2262,19 +2425,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">AbbVie Faces FDA Rejection On Manufacturing Issues For Wrinkle Drug</span>
+                <a href="https://finance.yahoo.com/sectors/healthcare/articles/abbvie-faces-fda-rejection-manufacturing-150128780.html" target="_blank" rel="noopener" class="news-title-link">AbbVie Faces FDA Rejection On Manufacturing Issues For Wrinkle Drug</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Healthcare CEF Insiders Are Quietly Buying While 60% of Distributions Return Capital</span>
+                <a href="https://247wallst.com/investing/2026/04/25/healthcare-cef-insiders-are-quietly-buying-while-60-of-distributions-return-capital/" target="_blank" rel="noopener" class="news-title-link">Healthcare CEF Insiders Are Quietly Buying While 60% of Distributions Return Capital</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">3 Stocks That Might Be Undervalued By Up To 48.3% Offering A Possible Discount</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/3-stocks-might-undervalued-48-173809484.html" target="_blank" rel="noopener" class="news-title-link">3 Stocks That Might Be Undervalued By Up To 48.3% Offering A Possible Discount</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">AbbVie's TrenibotE Receives FDA CRL Due to Manufacturing Issues</span>
+                <a href="https://finance.yahoo.com/sectors/healthcare/articles/abbvies-trenibote-receives-fda-crl-162300903.html" target="_blank" rel="noopener" class="news-title-link">AbbVie's TrenibotE Receives FDA CRL Due to Manufacturing Issues</a>
                 <span class="news-date">Apr 24</span>
             </div></div>
                         </div>
@@ -2501,19 +2664,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">Nvidia stock clinches record close, pushing market cap over $5 trillion once again</span>
+                <a href="https://finance.yahoo.com/sectors/technology/article/nvidia-stock-clinches-record-close-pushing-market-cap-over-5-trillion-once-again-173529477.html" target="_blank" rel="noopener" class="news-title-link">Nvidia stock clinches record close, pushing market cap over $5 trillion once again</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">5 big analyst AI moves: Palo Alto and Reddit get fresh Buy calls, AMD upgraded</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/5-big-analyst-ai-moves-093502052.html" target="_blank" rel="noopener" class="news-title-link">5 big analyst AI moves: Palo Alto and Reddit get fresh Buy calls, AMD upgraded</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">Snowflake Aims To Become AI Control Plane With New Enterprise Features</span>
+                <a href="https://finance.yahoo.com/sectors/technology/articles/snowflake-aims-become-ai-control-080242073.html" target="_blank" rel="noopener" class="news-title-link">Snowflake Aims To Become AI Control Plane With New Enterprise Features</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">1 No-Brainer Artificial Intelligence (AI) Stock to Buy With $5,000 and Hold for the Long T...</span>
+                <a href="https://www.fool.com/investing/2026/04/26/1-no-brainer-artificial-intelligence-ai-stock-to-b/" target="_blank" rel="noopener" class="news-title-link">1 No-Brainer Artificial Intelligence (AI) Stock to Buy With $5,000 and Hold for the Long T...</a>
                 <span class="news-date">Apr 26</span>
             </div></div>
                         </div>
@@ -2756,19 +2919,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Amazon May Be Set to Seize a Once-in-a-Lifetime Opportunity. Here's How Investors Can Bene...</span>
+                <a href="https://www.fool.com/investing/2026/04/26/amazon-may-be-set-to-seize-a-once-in-a-lifetime-op/" target="_blank" rel="noopener" class="news-title-link">Amazon May Be Set to Seize a Once-in-a-Lifetime Opportunity. Here's How Investors Can Bene...</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Nvidia Needs to Watch Out for This Custom Chip Designer (Hint: It's Not Broadcom)</span>
+                <a href="https://www.fool.com/investing/2026/04/25/nvidia-needs-to-watch-out-for-this-custom-chip-des/" target="_blank" rel="noopener" class="news-title-link">Nvidia Needs to Watch Out for This Custom Chip Designer (Hint: It's Not Broadcom)</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Dan Ives sends a blunt message to investors fleeing Oracle stock</span>
+                <a href="https://www.thestreet.com/investing/stocks/dan-ives-sends-a-blunt-message-to-investors-fleeing-oracle-stock" target="_blank" rel="noopener" class="news-title-link">Dan Ives sends a blunt message to investors fleeing Oracle stock</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Dow Jones Futures: Iran Talks Off; Apple, Amazon, Google Lead Earnings Wave</span>
+                <a href="https://www.investors.com/market-trend/stock-market-today/dow-jones-futures-apple-amazon-google-earnings-ai-iran-talks/?src=A00220&yptr=yahoo" target="_blank" rel="noopener" class="news-title-link">Dow Jones Futures: Iran Talks Off; Apple, Amazon, Google Lead Earnings Wave</a>
                 <span class="news-date">Apr 26</span>
             </div></div>
                         </div>
@@ -3011,19 +3174,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">This Allstate Insider Reduced Their Stake By 13%</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/allstate-insider-reduced-stake-13-120014682.html" target="_blank" rel="noopener" class="news-title-link">This Allstate Insider Reduced Their Stake By 13%</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">Is a Beat in the Cards for Arch Capital This Earnings Season?</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/beat-cards-arch-capital-earnings-134700831.html" target="_blank" rel="noopener" class="news-title-link">Is a Beat in the Cards for Arch Capital This Earnings Season?</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">What's in the Cards for Unum Group This Earnings Season?</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/whats-cards-unum-group-earnings-132000429.html" target="_blank" rel="noopener" class="news-title-link">What's in the Cards for Unum Group This Earnings Season?</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">Can Allstate Beat Q1 Earnings Estimates on Net Investment Income?</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/allstate-beat-q1-earnings-estimates-155700597.html" target="_blank" rel="noopener" class="news-title-link">Can Allstate Beat Q1 Earnings Estimates on Net Investment Income?</a>
                 <span class="news-date">Apr 23</span>
             </div></div>
                         </div>
@@ -3266,19 +3429,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Unveiling SoFi Technologies (SOFI) Q1 Outlook: Wall Street Estimates for Key Metrics</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/unveiling-sofi-technologies-sofi-q1-131504579.html" target="_blank" rel="noopener" class="news-title-link">Unveiling SoFi Technologies (SOFI) Q1 Outlook: Wall Street Estimates for Key Metrics</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">HELOC and home equity loan rates today, April 24, 2026: With price growth slowing, lenders...</span>
+                <a href="https://finance.yahoo.com/personal-finance/mortgages/article/heloc-home-equity-loan-interest-rates-today-friday-april-24-2026-100000237.html" target="_blank" rel="noopener" class="news-title-link">HELOC and home equity loan rates today, April 24, 2026: With price growth slowing, lenders...</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">PLTR vs. SOFI: Which High-Growth Tech Stock is the Better Buy Now?</span>
+                <a href="https://finance.yahoo.com/sectors/technology/articles/pltr-vs-sofi-high-growth-181900308.html" target="_blank" rel="noopener" class="news-title-link">PLTR vs. SOFI: Which High-Growth Tech Stock is the Better Buy Now?</a>
                 <span class="news-date">Apr 23</span>
             </div><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">SoFi Expands HELOC And XRP Offerings As Valuation Premium Persists</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/sofi-expands-heloc-xrp-offerings-010949146.html" target="_blank" rel="noopener" class="news-title-link">SoFi Expands HELOC And XRP Offerings As Valuation Premium Persists</a>
                 <span class="news-date">Apr 23</span>
             </div></div>
                         </div>
@@ -3525,21 +3688,21 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                         <div class="news-box">
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
-                <span class="news-icon news-neg">▼</span>
-                <span class="news-title">AI is boosting output rather than cutting jobs: analyst</span>
-                <span class="news-date">Apr 26</span>
-            </div><div class="news-item">
-                <span class="news-icon news-neu">●</span>
-                <span class="news-title">Dan Ives sends a blunt message to investors fleeing Oracle stock</span>
-                <span class="news-date">Apr 26</span>
-            </div><div class="news-item">
-                <span class="news-icon news-neu">●</span>
-                <span class="news-title">Dow Jones Futures: Iran Talks Off; Apple, Amazon, Google Lead Earnings Wave</span>
-                <span class="news-date">Apr 26</span>
-            </div><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">The $720 Billion Capex Trap: 2 Artificial Intelligence (AI) Hyperscalers Spending on Growt...</span>
-                <span class="news-date">Apr 25</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/ai-frenzy-propels-markets-record-102748301.html" target="_blank" rel="noopener" class="news-title-link">AI frenzy propels markets to record highs, fueling bubble debate</a>
+                <span class="news-date">Apr 26</span>
+            </div><div class="news-item">
+                <span class="news-icon news-neg">▼</span>
+                <a href="https://finance.yahoo.com/sectors/technology/articles/ai-boosting-output-rather-cutting-064509964.html" target="_blank" rel="noopener" class="news-title-link">AI is boosting output rather than cutting jobs: analyst</a>
+                <span class="news-date">Apr 26</span>
+            </div><div class="news-item">
+                <span class="news-icon news-neu">●</span>
+                <a href="https://www.thestreet.com/investing/stocks/dan-ives-sends-a-blunt-message-to-investors-fleeing-oracle-stock" target="_blank" rel="noopener" class="news-title-link">Dan Ives sends a blunt message to investors fleeing Oracle stock</a>
+                <span class="news-date">Apr 26</span>
+            </div><div class="news-item">
+                <span class="news-icon news-neu">●</span>
+                <a href="https://www.investors.com/market-trend/stock-market-today/dow-jones-futures-apple-amazon-google-earnings-ai-iran-talks/?src=A00220&yptr=yahoo" target="_blank" rel="noopener" class="news-title-link">Dow Jones Futures: Iran Talks Off; Apple, Amazon, Google Lead Earnings Wave</a>
+                <span class="news-date">Apr 26</span>
             </div></div>
                         </div>
                     </div>
@@ -3786,19 +3949,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">The $1.75 Trillion Launch: Is SpaceX's IPO a Generational Buy -- or the Ultimate Bubble?</span>
+                <a href="https://www.fool.com/investing/2026/04/26/the-175-trillion-launch-is-spacexs-ipo-a-generatio/" target="_blank" rel="noopener" class="news-title-link">The $1.75 Trillion Launch: Is SpaceX's IPO a Generational Buy -- or the Ultimate Bubble?</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Meta Employee Tracking For AI Training Raises Privacy And Valuation Questions</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/meta-employee-tracking-ai-training-030719473.html" target="_blank" rel="noopener" class="news-title-link">Meta Employee Tracking For AI Training Raises Privacy And Valuation Questions</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Dow Jones Futures: Iran Talks Off; Apple, Amazon, Google Lead Earnings Wave</span>
+                <a href="https://www.investors.com/market-trend/stock-market-today/dow-jones-futures-apple-amazon-google-earnings-ai-iran-talks/?src=A00220&yptr=yahoo" target="_blank" rel="noopener" class="news-title-link">Dow Jones Futures: Iran Talks Off; Apple, Amazon, Google Lead Earnings Wave</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">The $720 Billion Capex Trap: 2 Artificial Intelligence (AI) Hyperscalers Spending on Growt...</span>
+                <a href="https://www.fool.com/investing/2026/04/25/the-720-billion-capex-trap-2-artificial-intelligen/" target="_blank" rel="noopener" class="news-title-link">The $720 Billion Capex Trap: 2 Artificial Intelligence (AI) Hyperscalers Spending on Growt...</a>
                 <span class="news-date">Apr 25</span>
             </div></div>
                         </div>
@@ -4021,8 +4184,8 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                 <stop offset="100%" stop-color="#34d399" stop-opacity="0"/>
             </linearGradient>
         </defs>
-        <polyline points="8.0,136.3 9.5,134.7 11.1,126.4 12.6,112.9 14.1,115.2 15.7,94.7 17.2,92.0 18.8,95.4 20.3,83.6 21.8,82.4 23.4,79.9 24.9,64.5 26.4,67.2 28.0,72.5 29.5,58.2 31.0,56.4 32.6,51.4 34.1,59.9 35.6,78.5 37.2,77.5 38.7,88.0 40.3,70.4 41.8,68.2 43.3,65.3 44.9,52.7 46.4,59.7 47.9,58.5 49.5,55.1 51.0,53.0 52.5,45.5 54.1,54.8 55.6,46.4 57.2,44.5 58.7,46.8 60.2,90.5 61.8,79.9 63.3,78.6 64.8,127.9 66.4,137.1 67.9,122.1 69.4,97.7 71.0,110.3 72.5,116.5 74.0,109.3 75.6,90.7 77.1,86.4 78.7,91.3 80.2,79.0 81.7,85.6 83.3,89.9 84.8,84.3 86.3,86.9 87.9,108.3 89.4,103.8 90.9,108.0 92.5,99.7 94.0,99.6 95.6,104.3 97.1,101.1 98.6,94.5 100.2,89.2 101.7,86.9 103.2,79.4 104.8,79.3 106.3,87.2 107.8,94.0 109.4,82.2 110.9,92.7 112.4,76.8 114.0,82.9 115.5,77.9 117.1,90.6 118.6,69.6 120.1,70.7 121.7,69.8 123.2,63.8 124.7,54.4 126.3,57.7 127.8,53.8 129.3,51.6 130.9,40.1 132.4,41.3 134.0,30.0 135.5,39.2 137.0,41.8 138.6,43.3 140.1,43.6 141.6,35.9 143.2,41.4 144.7,39.1 146.2,35.3 147.8,53.7 149.3,49.8 150.8,54.0 152.4,61.4 153.9,46.4 155.5,59.8 157.0,55.7 158.5,50.1 160.1,30.5 161.6,50.7 163.1,53.8 164.7,53.2 166.2,76.5 167.7,78.4 169.3,80.8 170.8,84.3 172.4,79.5 173.9,78.4 175.4,70.4 177.0,64.7 178.5,59.7 180.0,62.4 181.6,60.7 183.1,66.2 184.6,84.1 186.2,95.4 187.7,92.6 189.2,78.6 190.8,86.8 192.3,107.6 193.9,89.8 195.4,81.1 196.9,72.0 198.5,73.1 200.0,69.2 201.5,69.4 203.1,71.5 204.6,81.8 206.1,100.1 207.7,101.5 209.2,104.2 210.8,117.0 212.3,103.0 213.8,102.1 215.4,102.2 216.9,104.3 218.4,102.7 220.0,94.0 221.5,89.4 223.0,98.5 224.6,114.3 226.1,128.6 227.6,143.5 229.2,139.0 230.7,143.0 232.3,122.9 233.8,127.0 235.3,113.1 236.9,115.6 238.4,106.6 239.9,117.1 241.5,114.0 243.0,101.4 244.5,119.8 246.1,114.6 247.6,122.8 249.2,127.5 250.7,125.4 252.2,85.9 253.8,72.2 255.3,76.7 256.8,81.7 258.4,82.6 259.9,81.4 261.4,71.7 263.0,66.1 264.5,65.1 266.0,60.1 267.6,59.9 269.1,62.6 270.7,63.4 272.2,73.9 273.7,86.3 275.3,77.6 276.8,58.7 278.3,59.3 279.9,59.1 281.4,65.0 282.9,79.9 284.5,114.2 286.0,111.2 287.6,118.0 289.1,123.0 290.6,135.5 292.2,142.2 293.7,133.7 295.2,146.8 296.8,142.6 298.3,153.8 299.8,152.2 301.4,116.2 302.9,124.2 304.4,97.5 306.0,105.0 307.5,100.4 309.1,103.1 310.6,108.1 312.1,129.7 313.7,121.6 315.2,126.3 316.7,142.4 318.3,157.1 319.8,151.3 321.3,141.6 322.9,154.0 324.4,144.1 326.0,193.0 327.5,189.8 329.0,171.5 330.6,162.8 332.1,158.9 333.6,152.8 335.2,147.5 336.7,149.7 338.2,146.9 339.8,150.7 341.3,158.1 342.8,162.9 344.4,180.2 345.9,191.0 347.5,189.9 349.0,172.9 350.5,176.0 352.1,205.2 353.6,200.9 355.1,192.5 356.7,186.0 358.2,188.3 359.7,182.2 361.3,185.4 362.8,212.0 364.4,196.3 365.9,187.2 367.4,200.1 369.0,197.2 370.5,184.2 372.0,189.4 373.6,175.2 375.1,179.5 376.6,187.4 378.2,171.4 379.7,164.0 381.2,153.0 382.8,155.3 384.3,150.9 385.9,158.4 387.4,166.9 388.9,168.9 390.5,181.4 392.0,178.5" fill="none" stroke="#34d399" stroke-width="2.2"/>
-        <polygon points="8.0,136.3 9.5,134.7 11.1,126.4 12.6,112.9 14.1,115.2 15.7,94.7 17.2,92.0 18.8,95.4 20.3,83.6 21.8,82.4 23.4,79.9 24.9,64.5 26.4,67.2 28.0,72.5 29.5,58.2 31.0,56.4 32.6,51.4 34.1,59.9 35.6,78.5 37.2,77.5 38.7,88.0 40.3,70.4 41.8,68.2 43.3,65.3 44.9,52.7 46.4,59.7 47.9,58.5 49.5,55.1 51.0,53.0 52.5,45.5 54.1,54.8 55.6,46.4 57.2,44.5 58.7,46.8 60.2,90.5 61.8,79.9 63.3,78.6 64.8,127.9 66.4,137.1 67.9,122.1 69.4,97.7 71.0,110.3 72.5,116.5 74.0,109.3 75.6,90.7 77.1,86.4 78.7,91.3 80.2,79.0 81.7,85.6 83.3,89.9 84.8,84.3 86.3,86.9 87.9,108.3 89.4,103.8 90.9,108.0 92.5,99.7 94.0,99.6 95.6,104.3 97.1,101.1 98.6,94.5 100.2,89.2 101.7,86.9 103.2,79.4 104.8,79.3 106.3,87.2 107.8,94.0 109.4,82.2 110.9,92.7 112.4,76.8 114.0,82.9 115.5,77.9 117.1,90.6 118.6,69.6 120.1,70.7 121.7,69.8 123.2,63.8 124.7,54.4 126.3,57.7 127.8,53.8 129.3,51.6 130.9,40.1 132.4,41.3 134.0,30.0 135.5,39.2 137.0,41.8 138.6,43.3 140.1,43.6 141.6,35.9 143.2,41.4 144.7,39.1 146.2,35.3 147.8,53.7 149.3,49.8 150.8,54.0 152.4,61.4 153.9,46.4 155.5,59.8 157.0,55.7 158.5,50.1 160.1,30.5 161.6,50.7 163.1,53.8 164.7,53.2 166.2,76.5 167.7,78.4 169.3,80.8 170.8,84.3 172.4,79.5 173.9,78.4 175.4,70.4 177.0,64.7 178.5,59.7 180.0,62.4 181.6,60.7 183.1,66.2 184.6,84.1 186.2,95.4 187.7,92.6 189.2,78.6 190.8,86.8 192.3,107.6 193.9,89.8 195.4,81.1 196.9,72.0 198.5,73.1 200.0,69.2 201.5,69.4 203.1,71.5 204.6,81.8 206.1,100.1 207.7,101.5 209.2,104.2 210.8,117.0 212.3,103.0 213.8,102.1 215.4,102.2 216.9,104.3 218.4,102.7 220.0,94.0 221.5,89.4 223.0,98.5 224.6,114.3 226.1,128.6 227.6,143.5 229.2,139.0 230.7,143.0 232.3,122.9 233.8,127.0 235.3,113.1 236.9,115.6 238.4,106.6 239.9,117.1 241.5,114.0 243.0,101.4 244.5,119.8 246.1,114.6 247.6,122.8 249.2,127.5 250.7,125.4 252.2,85.9 253.8,72.2 255.3,76.7 256.8,81.7 258.4,82.6 259.9,81.4 261.4,71.7 263.0,66.1 264.5,65.1 266.0,60.1 267.6,59.9 269.1,62.6 270.7,63.4 272.2,73.9 273.7,86.3 275.3,77.6 276.8,58.7 278.3,59.3 279.9,59.1 281.4,65.0 282.9,79.9 284.5,114.2 286.0,111.2 287.6,118.0 289.1,123.0 290.6,135.5 292.2,142.2 293.7,133.7 295.2,146.8 296.8,142.6 298.3,153.8 299.8,152.2 301.4,116.2 302.9,124.2 304.4,97.5 306.0,105.0 307.5,100.4 309.1,103.1 310.6,108.1 312.1,129.7 313.7,121.6 315.2,126.3 316.7,142.4 318.3,157.1 319.8,151.3 321.3,141.6 322.9,154.0 324.4,144.1 326.0,193.0 327.5,189.8 329.0,171.5 330.6,162.8 332.1,158.9 333.6,152.8 335.2,147.5 336.7,149.7 338.2,146.9 339.8,150.7 341.3,158.1 342.8,162.9 344.4,180.2 345.9,191.0 347.5,189.9 349.0,172.9 350.5,176.0 352.1,205.2 353.6,200.9 355.1,192.5 356.7,186.0 358.2,188.3 359.7,182.2 361.3,185.4 362.8,212.0 364.4,196.3 365.9,187.2 367.4,200.1 369.0,197.2 370.5,184.2 372.0,189.4 373.6,175.2 375.1,179.5 376.6,187.4 378.2,171.4 379.7,164.0 381.2,153.0 382.8,155.3 384.3,150.9 385.9,158.4 387.4,166.9 388.9,168.9 390.5,181.4 392.0,178.5 392.0,212.0 8.0,212.0" fill="url(#pg-MA)"/>
+        <polyline points="8.0,136.3 9.5,134.7 11.1,126.4 12.6,112.9 14.1,115.2 15.7,94.7 17.2,92.0 18.8,95.4 20.3,83.6 21.8,82.4 23.4,79.9 24.9,64.5 26.4,67.2 28.0,72.5 29.5,58.2 31.0,56.4 32.6,51.4 34.1,59.9 35.6,78.5 37.2,77.5 38.7,88.0 40.3,70.4 41.8,68.2 43.3,65.3 44.9,52.7 46.4,59.7 47.9,58.5 49.5,55.1 51.0,53.0 52.5,45.5 54.1,54.8 55.6,46.4 57.2,44.5 58.7,46.8 60.2,90.5 61.8,79.9 63.3,78.6 64.8,127.9 66.4,137.1 67.9,122.1 69.4,97.7 71.0,110.3 72.5,116.5 74.0,109.3 75.6,90.7 77.1,86.4 78.7,91.3 80.2,79.0 81.7,85.6 83.3,89.9 84.8,84.4 86.3,86.9 87.9,108.3 89.4,103.8 90.9,108.0 92.5,99.7 94.0,99.6 95.6,104.3 97.1,101.1 98.6,94.5 100.2,89.2 101.7,86.9 103.2,79.4 104.8,79.3 106.3,87.2 107.8,94.0 109.4,82.2 110.9,92.7 112.4,76.8 114.0,82.9 115.5,77.9 117.1,90.6 118.6,69.6 120.1,70.7 121.7,69.8 123.2,63.8 124.7,54.4 126.3,57.7 127.8,53.8 129.3,51.6 130.9,40.1 132.4,41.3 134.0,30.0 135.5,39.2 137.0,41.8 138.6,43.3 140.1,43.6 141.6,35.9 143.2,41.4 144.7,39.1 146.2,35.3 147.8,53.7 149.3,49.8 150.8,54.0 152.4,61.4 153.9,46.4 155.5,59.8 157.0,55.7 158.5,50.1 160.1,30.5 161.6,50.7 163.1,53.8 164.7,53.2 166.2,76.5 167.7,78.4 169.3,80.8 170.8,84.3 172.4,79.5 173.9,78.4 175.4,70.4 177.0,64.7 178.5,59.7 180.0,62.4 181.6,60.7 183.1,66.2 184.6,84.1 186.2,95.4 187.7,92.6 189.2,78.6 190.8,86.8 192.3,107.6 193.9,89.8 195.4,81.1 196.9,72.0 198.5,73.1 200.0,69.2 201.5,69.4 203.1,71.5 204.6,81.8 206.1,100.1 207.7,101.5 209.2,104.2 210.8,117.0 212.3,103.0 213.8,102.1 215.4,102.2 216.9,104.3 218.4,102.7 220.0,94.0 221.5,89.4 223.0,98.5 224.6,114.3 226.1,128.6 227.6,143.5 229.2,139.0 230.7,143.0 232.3,122.9 233.8,127.0 235.3,113.1 236.9,115.6 238.4,106.6 239.9,117.1 241.5,114.0 243.0,101.4 244.5,119.8 246.1,114.6 247.6,122.8 249.2,127.5 250.7,125.4 252.2,85.9 253.8,72.2 255.3,76.7 256.8,81.7 258.4,82.6 259.9,81.4 261.4,71.7 263.0,66.1 264.5,65.1 266.0,60.1 267.6,59.9 269.1,62.6 270.7,63.4 272.2,73.9 273.7,86.3 275.3,77.6 276.8,58.7 278.3,59.3 279.9,59.1 281.4,65.0 282.9,79.9 284.5,114.2 286.0,111.2 287.6,118.0 289.1,123.0 290.6,135.5 292.2,142.2 293.7,133.7 295.2,146.8 296.8,142.6 298.3,153.8 299.8,152.2 301.4,116.2 302.9,124.2 304.4,97.5 306.0,105.0 307.5,100.4 309.1,103.1 310.6,108.1 312.1,129.7 313.7,121.6 315.2,126.3 316.7,142.4 318.3,157.1 319.8,151.3 321.3,141.6 322.9,154.0 324.4,144.1 326.0,193.0 327.5,189.8 329.0,171.5 330.6,162.8 332.1,158.9 333.6,152.8 335.2,147.5 336.7,149.7 338.2,146.9 339.8,150.7 341.3,158.1 342.8,162.9 344.4,180.2 345.9,191.0 347.5,189.9 349.0,172.9 350.5,176.0 352.1,205.2 353.6,200.9 355.1,192.5 356.7,186.0 358.2,188.3 359.7,182.2 361.3,185.4 362.8,212.0 364.4,196.3 365.9,187.2 367.4,200.1 369.0,197.2 370.5,184.2 372.0,189.4 373.6,175.2 375.1,179.5 376.6,187.4 378.2,171.4 379.7,164.0 381.2,153.0 382.8,155.3 384.3,150.9 385.9,158.4 387.4,166.9 388.9,168.9 390.5,181.4 392.0,178.5" fill="none" stroke="#34d399" stroke-width="2.2"/>
+        <polygon points="8.0,136.3 9.5,134.7 11.1,126.4 12.6,112.9 14.1,115.2 15.7,94.7 17.2,92.0 18.8,95.4 20.3,83.6 21.8,82.4 23.4,79.9 24.9,64.5 26.4,67.2 28.0,72.5 29.5,58.2 31.0,56.4 32.6,51.4 34.1,59.9 35.6,78.5 37.2,77.5 38.7,88.0 40.3,70.4 41.8,68.2 43.3,65.3 44.9,52.7 46.4,59.7 47.9,58.5 49.5,55.1 51.0,53.0 52.5,45.5 54.1,54.8 55.6,46.4 57.2,44.5 58.7,46.8 60.2,90.5 61.8,79.9 63.3,78.6 64.8,127.9 66.4,137.1 67.9,122.1 69.4,97.7 71.0,110.3 72.5,116.5 74.0,109.3 75.6,90.7 77.1,86.4 78.7,91.3 80.2,79.0 81.7,85.6 83.3,89.9 84.8,84.4 86.3,86.9 87.9,108.3 89.4,103.8 90.9,108.0 92.5,99.7 94.0,99.6 95.6,104.3 97.1,101.1 98.6,94.5 100.2,89.2 101.7,86.9 103.2,79.4 104.8,79.3 106.3,87.2 107.8,94.0 109.4,82.2 110.9,92.7 112.4,76.8 114.0,82.9 115.5,77.9 117.1,90.6 118.6,69.6 120.1,70.7 121.7,69.8 123.2,63.8 124.7,54.4 126.3,57.7 127.8,53.8 129.3,51.6 130.9,40.1 132.4,41.3 134.0,30.0 135.5,39.2 137.0,41.8 138.6,43.3 140.1,43.6 141.6,35.9 143.2,41.4 144.7,39.1 146.2,35.3 147.8,53.7 149.3,49.8 150.8,54.0 152.4,61.4 153.9,46.4 155.5,59.8 157.0,55.7 158.5,50.1 160.1,30.5 161.6,50.7 163.1,53.8 164.7,53.2 166.2,76.5 167.7,78.4 169.3,80.8 170.8,84.3 172.4,79.5 173.9,78.4 175.4,70.4 177.0,64.7 178.5,59.7 180.0,62.4 181.6,60.7 183.1,66.2 184.6,84.1 186.2,95.4 187.7,92.6 189.2,78.6 190.8,86.8 192.3,107.6 193.9,89.8 195.4,81.1 196.9,72.0 198.5,73.1 200.0,69.2 201.5,69.4 203.1,71.5 204.6,81.8 206.1,100.1 207.7,101.5 209.2,104.2 210.8,117.0 212.3,103.0 213.8,102.1 215.4,102.2 216.9,104.3 218.4,102.7 220.0,94.0 221.5,89.4 223.0,98.5 224.6,114.3 226.1,128.6 227.6,143.5 229.2,139.0 230.7,143.0 232.3,122.9 233.8,127.0 235.3,113.1 236.9,115.6 238.4,106.6 239.9,117.1 241.5,114.0 243.0,101.4 244.5,119.8 246.1,114.6 247.6,122.8 249.2,127.5 250.7,125.4 252.2,85.9 253.8,72.2 255.3,76.7 256.8,81.7 258.4,82.6 259.9,81.4 261.4,71.7 263.0,66.1 264.5,65.1 266.0,60.1 267.6,59.9 269.1,62.6 270.7,63.4 272.2,73.9 273.7,86.3 275.3,77.6 276.8,58.7 278.3,59.3 279.9,59.1 281.4,65.0 282.9,79.9 284.5,114.2 286.0,111.2 287.6,118.0 289.1,123.0 290.6,135.5 292.2,142.2 293.7,133.7 295.2,146.8 296.8,142.6 298.3,153.8 299.8,152.2 301.4,116.2 302.9,124.2 304.4,97.5 306.0,105.0 307.5,100.4 309.1,103.1 310.6,108.1 312.1,129.7 313.7,121.6 315.2,126.3 316.7,142.4 318.3,157.1 319.8,151.3 321.3,141.6 322.9,154.0 324.4,144.1 326.0,193.0 327.5,189.8 329.0,171.5 330.6,162.8 332.1,158.9 333.6,152.8 335.2,147.5 336.7,149.7 338.2,146.9 339.8,150.7 341.3,158.1 342.8,162.9 344.4,180.2 345.9,191.0 347.5,189.9 349.0,172.9 350.5,176.0 352.1,205.2 353.6,200.9 355.1,192.5 356.7,186.0 358.2,188.3 359.7,182.2 361.3,185.4 362.8,212.0 364.4,196.3 365.9,187.2 367.4,200.1 369.0,197.2 370.5,184.2 372.0,189.4 373.6,175.2 375.1,179.5 376.6,187.4 378.2,171.4 379.7,164.0 381.2,153.0 382.8,155.3 384.3,150.9 385.9,158.4 387.4,166.9 388.9,168.9 390.5,181.4 392.0,178.5 392.0,212.0 8.0,212.0" fill="url(#pg-MA)"/>
         <line x1="8" y1="212.0" x2="392" y2="212.0" stroke="#1e293b" stroke-width="0.5"/>
         <text x="10" y="20" fill="#64748b" font-size="13" font-weight="600" letter-spacing="0.5">1Y PRICE</text>
         <rect x="324" y="205" width="64" height="16" rx="3" fill="#7f1d1d"/>
@@ -4056,19 +4219,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">ECB Picks Open European Standards for Digital Euro, Sidelining Visa and Mastercard</span>
+                <a href="https://beincrypto.com/ecb-digital-euro-open-standards/" target="_blank" rel="noopener" class="news-title-link">ECB Picks Open European Standards for Digital Euro, Sidelining Visa and Mastercard</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Mastercard Links Undervalued Stock Story To Blockchain Security Leadership</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/mastercard-links-undervalued-stock-story-080534762.html" target="_blank" rel="noopener" class="news-title-link">Mastercard Links Undervalued Stock Story To Blockchain Security Leadership</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Is Mastercard Incorporated (MA) A Good Stock To Buy Now?</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/mastercard-incorporated-ma-good-stock-182714788.html" target="_blank" rel="noopener" class="news-title-link">Is Mastercard Incorporated (MA) A Good Stock To Buy Now?</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">GDV’s $1.80 annual payout faces a hidden test as leverage amplifies market risk</span>
+                <a href="https://247wallst.com/investing/2026/04/24/gdvs-1-80-annual-payout-faces-a-hidden-test-as-leverage-amplifies-market-risk/" target="_blank" rel="noopener" class="news-title-link">GDV’s $1.80 annual payout faces a hidden test as leverage amplifies market risk</a>
                 <span class="news-date">Apr 24</span>
             </div></div>
                         </div>
@@ -4308,19 +4471,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Should You Add a Healthcare Stock to Your Portfolio This Month? And Should It Be Eli Lilly...</span>
+                <a href="https://www.fool.com/investing/2026/04/25/should-you-add-a-healthcare-stock-to-portfolio-thi/" target="_blank" rel="noopener" class="news-title-link">Should You Add a Healthcare Stock to Your Portfolio This Month? And Should It Be Eli Lilly...</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">A Look At Hims & Hers Health (HIMS) Valuation After Fresh GLP-1 Analyst Endorsement And Ph...</span>
+                <a href="https://finance.yahoo.com/sectors/healthcare/articles/look-hims-hers-health-hims-230436331.html" target="_blank" rel="noopener" class="news-title-link">A Look At Hims & Hers Health (HIMS) Valuation After Fresh GLP-1 Analyst Endorsement And Ph...</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Why Eli Lilly (LLY) Shares Are Trading Lower Today</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/why-eli-lilly-lly-shares-191723726.html" target="_blank" rel="noopener" class="news-title-link">Why Eli Lilly (LLY) Shares Are Trading Lower Today</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Is This Tech Giant the Next Potential Winner in the GLP-1 Weight Loss Boom?</span>
+                <a href="https://www.fool.com/investing/2026/04/25/is-this-tech-giant-the-next-potential-winner-in-th/" target="_blank" rel="noopener" class="news-title-link">Is This Tech Giant the Next Potential Winner in the GLP-1 Weight Loss Boom?</a>
                 <span class="news-date">Apr 25</span>
             </div></div>
                         </div>
@@ -4555,19 +4718,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Q4 Earnings Roundup: Merck (NYSE:MRK) And The Rest Of The Branded Pharmaceuticals Segment</span>
+                <a href="https://finance.yahoo.com/sectors/healthcare/articles/q4-earnings-roundup-merck-nyse-092523152.html" target="_blank" rel="noopener" class="news-title-link">Q4 Earnings Roundup: Merck (NYSE:MRK) And The Rest Of The Branded Pharmaceuticals Segment</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Alphabet Next: Google Cloud Says 75% of Customers Use AI as Pichai Targets $175B-$185B Cap...</span>
+                <a href="https://www.marketbeat.com/instant-alerts/alphabet-next-google-cloud-says-75-of-customers-use-ai-as-pichai-targets-175b-185b-capex-2026-04-25/?utm_source=yahoofinance&utm_medium=yahoofinance" target="_blank" rel="noopener" class="news-title-link">Alphabet Next: Google Cloud Says 75% of Customers Use AI as Pichai Targets $175B-$185B Cap...</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Jim Cramer Says “Merck Is Terrific”</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/jim-cramer-says-merck-terrific-032639052.html" target="_blank" rel="noopener" class="news-title-link">Jim Cramer Says “Merck Is Terrific”</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Organon (OGN) Takeover Bid Climbs to $13B, Shares Soar 30.9%</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/organon-ogn-takeover-bid-climbs-020017548.html" target="_blank" rel="noopener" class="news-title-link">Organon (OGN) Takeover Bid Climbs to $13B, Shares Soar 30.9%</a>
                 <span class="news-date">Apr 25</span>
             </div></div>
                         </div>
@@ -4802,19 +4965,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">John Ternus Will Become Apple's New CEO in September. Is Now a Good Time to Buy the Stock?</span>
+                <a href="https://www.fool.com/investing/2026/04/26/john-ternus-will-become-apples-new-ceo-in-septembe/" target="_blank" rel="noopener" class="news-title-link">John Ternus Will Become Apple's New CEO in September. Is Now a Good Time to Buy the Stock?</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Dow Jones Futures: Iran Talks Off; Apple, Amazon, Google Lead Earnings Wave</span>
+                <a href="https://www.investors.com/market-trend/stock-market-today/dow-jones-futures-apple-amazon-google-earnings-ai-iran-talks/?src=A00220&yptr=yahoo" target="_blank" rel="noopener" class="news-title-link">Dow Jones Futures: Iran Talks Off; Apple, Amazon, Google Lead Earnings Wave</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">A Look At Skyworks Solutions (SWKS) Valuation After Barclays Upgrade And Apple Device Dela...</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/look-skyworks-solutions-swks-valuation-170510668.html" target="_blank" rel="noopener" class="news-title-link">A Look At Skyworks Solutions (SWKS) Valuation After Barclays Upgrade And Apple Device Dela...</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">The Highest-Paid CEO Is a Furniture Salesman</span>
+                <a href="https://www.barrons.com/articles/ceo-pay-apple-adobe-wayfair-d72581df?siteid=yhoof2&yptr=yahoo" target="_blank" rel="noopener" class="news-title-link">The Highest-Paid CEO Is a Furniture Salesman</a>
                 <span class="news-date">Apr 25</span>
             </div></div>
                         </div>
@@ -5057,19 +5220,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Dow Jones Futures: Iran Talks Off; Apple, Amazon, Google Lead Earnings Wave</span>
+                <a href="https://www.investors.com/market-trend/stock-market-today/dow-jones-futures-apple-amazon-google-earnings-ai-iran-talks/?src=A00220&yptr=yahoo" target="_blank" rel="noopener" class="news-title-link">Dow Jones Futures: Iran Talks Off; Apple, Amazon, Google Lead Earnings Wave</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Does Caterpillar’s Monarch Deal and CFO Shift Redraw the Bull Case for CAT’s Automation Fu...</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/does-caterpillar-monarch-deal-cfo-110531031.html" target="_blank" rel="noopener" class="news-title-link">Does Caterpillar’s Monarch Deal and CFO Shift Redraw the Bull Case for CAT’s Automation Fu...</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Stock Market Week Ahead: Hyperscaler Blitz, Federal Reserve Transition</span>
+                <a href="https://www.investors.com/research/investing-action-plan/stock-market-week-hyperscalers-federal-reserve-warsh-powell-apple-amazon-google/?src=A00220&yptr=yahoo" target="_blank" rel="noopener" class="news-title-link">Stock Market Week Ahead: Hyperscaler Blitz, Federal Reserve Transition</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">1 Surging  Stock to Keep an Eye On and 2 We Ignore</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/1-surging-stock-keep-eye-014923872.html" target="_blank" rel="noopener" class="news-title-link">1 Surging  Stock to Keep an Eye On and 2 We Ignore</a>
                 <span class="news-date">Apr 25</span>
             </div></div>
                         </div>
@@ -5312,19 +5475,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Strait Of Hormuz Tensions Add Fuel Cost Question For Royal Caribbean</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/strait-hormuz-tensions-add-fuel-160608224.html" target="_blank" rel="noopener" class="news-title-link">Strait Of Hormuz Tensions Add Fuel Cost Question For Royal Caribbean</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">How Chris Ong helped Seatrium emerge from a messy merger between two shipyards to become a...</span>
+                <a href="https://finance.yahoo.com/sectors/energy/articles/chris-ong-helped-seatrium-emerge-210000256.html" target="_blank" rel="noopener" class="news-title-link">How Chris Ong helped Seatrium emerge from a messy merger between two shipyards to become a...</a>
                 <span class="news-date">Apr 23</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Royal Caribbean (RCL) Earnings Expected to Grow: What to Know Ahead of Next Week's Release</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/royal-caribbean-rcl-earnings-expected-140010022.html" target="_blank" rel="noopener" class="news-title-link">Royal Caribbean (RCL) Earnings Expected to Grow: What to Know Ahead of Next Week's Release</a>
                 <span class="news-date">Apr 23</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Royal Caribbean (RCL) Is Considered a Good Investment by Brokers: Is That True?</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/royal-caribbean-rcl-considered-good-133002389.html" target="_blank" rel="noopener" class="news-title-link">Royal Caribbean (RCL) Is Considered a Good Investment by Brokers: Is That True?</a>
                 <span class="news-date">Apr 23</span>
             </div></div>
                         </div>
@@ -5572,19 +5735,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">EV Stock Showdown: Rivian or Lucid -- Which Is the Smarter Long-Term Buy?</span>
+                <a href="https://www.fool.com/investing/2026/04/25/ev-stock-showdown-rivian-or-lucid-which-is-the-sma/" target="_blank" rel="noopener" class="news-title-link">EV Stock Showdown: Rivian or Lucid -- Which Is the Smarter Long-Term Buy?</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">‘We will not survive’: Toyota, Honda and Ford CEOs issue chilling warning about China — an...</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/not-survive-toyota-honda-ford-130000088.html" target="_blank" rel="noopener" class="news-title-link">‘We will not survive’: Toyota, Honda and Ford CEOs issue chilling warning about China — an...</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Rivian Automotive (RIVN) Stock Dips While Market Gains: Key Facts</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/rivian-automotive-rivn-stock-dips-214503530.html" target="_blank" rel="noopener" class="news-title-link">Rivian Automotive (RIVN) Stock Dips While Market Gains: Key Facts</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Is Rivian’s R2 The Pivot That Could Reprice The Stock?</span>
+                <a href="https://www.trefis.com/articles/597272/is-rivians-r2-the-pivot-that-could-reprice-the-stock/2026-04-24?source=yahoo&from=RIVN-2026-04-24" target="_blank" rel="noopener" class="news-title-link">Is Rivian’s R2 The Pivot That Could Reprice The Stock?</a>
                 <span class="news-date">Apr 24</span>
             </div></div>
                         </div>
@@ -5842,19 +6005,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neg">▼</span>
-                <span class="news-title">Iran executes alleged militant amid deepening internal unrest</span>
+                <a href="https://www.yahoo.com/news/articles/iran-executes-alleged-militant-amid-071507443.html" target="_blank" rel="noopener" class="news-title-link">Iran executes alleged militant amid deepening internal unrest</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">The Greatest Entrepreneurs in U.S. History, According to Business Historians</span>
+                <a href="https://www.wsj.com/business/entrepreneurship/best-entrepreneurs-us-history-23c83c23?siteid=yhoof2&yptr=yahoo" target="_blank" rel="noopener" class="news-title-link">The Greatest Entrepreneurs in U.S. History, According to Business Historians</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">The wind is at Democrats’ backs as the election cycle heats up, say strategists</span>
+                <a href="https://finance.yahoo.com/economy/policy/articles/wind-democrats-backs-election-cycle-015357582.html" target="_blank" rel="noopener" class="news-title-link">The wind is at Democrats’ backs as the election cycle heats up, say strategists</a>
                 <span class="news-date">Apr 25</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Exxon Mobil (XOM) Stock Sinks As Market Gains: What You Should Know</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/exxon-mobil-xom-stock-sinks-214503489.html" target="_blank" rel="noopener" class="news-title-link">Exxon Mobil (XOM) Stock Sinks As Market Gains: What You Should Know</a>
                 <span class="news-date">Apr 24</span>
             </div></div>
                         </div>
@@ -6097,19 +6260,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Chevron Governance Questions In Venezuela Add A New Risk Consideration</span>
+                <a href="https://finance.yahoo.com/sectors/energy/articles/chevron-governance-questions-venezuela-add-100346181.html" target="_blank" rel="noopener" class="news-title-link">Chevron Governance Questions In Venezuela Add A New Risk Consideration</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Why Strait of Hormuz disruption is more severe for global LNG markets than for oil</span>
+                <a href="https://finance.yahoo.com/sectors/energy/articles/why-strait-hormuz-disruption-more-082327446.html" target="_blank" rel="noopener" class="news-title-link">Why Strait of Hormuz disruption is more severe for global LNG markets than for oil</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neg">▼</span>
-                <span class="news-title">Iran executes alleged militant amid deepening internal unrest</span>
+                <a href="https://www.yahoo.com/news/articles/iran-executes-alleged-militant-amid-071507443.html" target="_blank" rel="noopener" class="news-title-link">Iran executes alleged militant amid deepening internal unrest</a>
                 <span class="news-date">Apr 26</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">The wind is at Democrats’ backs as the election cycle heats up, say strategists</span>
+                <a href="https://finance.yahoo.com/economy/policy/articles/wind-democrats-backs-election-cycle-015357582.html" target="_blank" rel="noopener" class="news-title-link">The wind is at Democrats’ backs as the election cycle heats up, say strategists</a>
                 <span class="news-date">Apr 25</span>
             </div></div>
                         </div>
@@ -6352,19 +6515,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Estée Lauder (EL) Seeks €5B Financing for Puig Bid</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/est-e-lauder-el-seeks-163930568.html" target="_blank" rel="noopener" class="news-title-link">Estée Lauder (EL) Seeks €5B Financing for Puig Bid</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Estee Lauder (EL) Earnings Expected to Grow: Should You Buy?</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/estee-lauder-el-earnings-expected-140003373.html" target="_blank" rel="noopener" class="news-title-link">Estee Lauder (EL) Earnings Expected to Grow: Should You Buy?</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-neg">▼</span>
-                <span class="news-title">Estée Lauder (EL) Faces PT Cuts from JPMorgan and Barclays Ahead of Earnings</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/est-e-lauder-el-faces-200831918.html" target="_blank" rel="noopener" class="news-title-link">Estée Lauder (EL) Faces PT Cuts from JPMorgan and Barclays Ahead of Earnings</a>
                 <span class="news-date">Apr 23</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">What to Expect From Estée Lauder's Next Quarterly Earnings Report</span>
+                <a href="https://www.barchart.com/story/news/1469095/what-to-expect-from-estee-lauder-s-next-quarterly-earnings-report" target="_blank" rel="noopener" class="news-title-link">What to Expect From Estée Lauder's Next Quarterly Earnings Report</a>
                 <span class="news-date">Apr 23</span>
             </div></div>
                         </div>
@@ -6618,19 +6781,19 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                             <div class="box-label">📰 Latest news</div>
                             <div class="news-list"><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Grab’s US$400m Buyback And Indonesia Competition Shift Investor Focus</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/grab-us-400m-buyback-indonesia-110753695.html" target="_blank" rel="noopener" class="news-title-link">Grab’s US$400m Buyback And Indonesia Competition Shift Investor Focus</a>
                 <span class="news-date">Apr 24</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Here's Why Grab Holdings Limited (GRAB) Fell More Than Broader Market</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/heres-why-grab-holdings-limited-215004184.html" target="_blank" rel="noopener" class="news-title-link">Here's Why Grab Holdings Limited (GRAB) Fell More Than Broader Market</a>
                 <span class="news-date">Apr 23</span>
             </div><div class="news-item">
                 <span class="news-icon news-pos">▲</span>
-                <span class="news-title">Is It Time To Reassess Grab Holdings (GRAB) After Strong Year To Date Rally</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/time-reassess-grab-holdings-grab-160545156.html" target="_blank" rel="noopener" class="news-title-link">Is It Time To Reassess Grab Holdings (GRAB) After Strong Year To Date Rally</a>
                 <span class="news-date">Apr 23</span>
             </div><div class="news-item">
                 <span class="news-icon news-neu">●</span>
-                <span class="news-title">Here’s What BofA Securities Thinks About Grab Holdings Ltd (GRAB)</span>
+                <a href="https://finance.yahoo.com/markets/stocks/articles/bofa-securities-thinks-grab-holdings-112606157.html" target="_blank" rel="noopener" class="news-title-link">Here’s What BofA Securities Thinks About Grab Holdings Ltd (GRAB)</a>
                 <span class="news-date">Apr 22</span>
             </div></div>
                         </div>
