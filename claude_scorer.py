@@ -68,14 +68,21 @@ What Ash WANTS:
 Return ONLY valid JSON, no preamble:
 {
   "score": <float 0-10>,
-  "tag": "SAFE BET" | "WATCH" | "SKIP",
+  "tag": "STRONG BUY" | "BUY" | "SKIP",
   "blurb": "<2-3 sentences, plain English>",
   "bullets": [
     {"tone": "good" | "warn" | "bad", "text": "<plain English, max 30 words>"}
-  ]
+  ],
+  "news_sentiments": ["positive" | "negative" | "neutral", ...]
 }
 
-Score: SAFE BET >= 8, WATCH 6-7.9, SKIP < 6
+For "news_sentiments": return one entry per headline I show you, IN ORDER.
+Classify each headline's IMPACT on the stock:
+- "positive" = bullish for the stock (good earnings, deals, upgrades, partnerships)
+- "negative" = bearish (downgrades, misses, lawsuits, FDA rejections, exec departures, regulatory threats)
+- "neutral" = informational, off-topic, or mixed signal
+
+Score: STRONG BUY >= 8, BUY 6-7.9, SKIP < 6
 Score reflects "is now a good time to deal with this company"
 
 GOOD blurb examples:
@@ -120,8 +127,8 @@ Current price: ${pick.get('price', 0):.2f}
 1y price action: {hc.get('pct_1y', 0)}% (range: ${hc.get('low_1y', 0):.0f}-${hc.get('high_1y', 0):.0f})
 Earnings: in {pick.get('days_to_earnings')} days
 
-Recent news headlines:
-{chr(10).join(f'  - {t}' for t in news_titles) if news_titles else '  (none)'}
+Recent news headlines (classify each one's sentiment in your response):
+{chr(10).join(f'  {i+1}. {t}' for i, t in enumerate(news_titles)) if news_titles else '  (none)'}
 
 Business signals:
 - Insider activity: {pick.get('insider_activity')}
@@ -140,9 +147,10 @@ def _fallback_result(pick):
     algo = pick.get('score', 0)
     return {
         'claude_score': algo,
-        'claude_tag': 'SAFE BET' if algo >= 8 else 'WATCH' if algo >= 6 else 'SKIP',
+        'claude_tag': 'STRONG BUY' if algo >= 8 else 'BUY' if algo >= 6 else 'SKIP',
         'claude_blurb': '',
         'claude_bullets': [('warn', 'Claude API unavailable - using algo score only')],
+        'claude_news_sentiments': [],
     }
 
 
@@ -163,13 +171,16 @@ def _score_one(client, pick, retries=2):
 
             return {
                 'claude_score': float(data.get('score', pick.get('score', 0))),
-                'claude_tag': data.get('tag', 'WATCH'),
+                'claude_tag': data.get('tag', 'BUY'),
                 'claude_blurb': data.get('blurb', '').strip(),
                 'claude_bullets': [
                     (b.get('tone', 'warn'), b.get('text', ''))
                     for b in data.get('bullets', [])
                     if b.get('text')
                 ][:4],
+                'claude_news_sentiments': [
+                    s for s in data.get('news_sentiments', []) if s in ('positive', 'negative', 'neutral')
+                ],
             }
         except Exception as e:
             if attempt < retries:
