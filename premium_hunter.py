@@ -2213,6 +2213,8 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
         # ============================================
         # CLAUDE COMMENTARY — uses real API output when available
         # ============================================
+        edge = r.get('edge_ratio', 0)
+        red_x = es.get('red_x_count', 0)
         if r.get('claude_bullets'):
             # Real Claude API response
             claude_tag = r.get('claude_tag', 'WATCH')
@@ -2221,7 +2223,6 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
             # Fallback: algo-derived placeholders
             claude_tag = 'SAFE BET' if my_score >= 8 else 'WATCH' if my_score >= 6 else 'SKIP'
             claude_bullets = []
-            edge = r.get('edge_ratio', 0)
             if edge >= 4:
                 claude_bullets.append(('good', f'Edge {edge}x — premium way overpriced vs actual moves'))
             elif edge >= 2:
@@ -2229,7 +2230,6 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
             else:
                 claude_bullets.append(('warn', f'Edge only {edge}x — premium not generous'))
             
-            red_x = es.get('red_x_count', 0)
             if red_x == 0:
                 claude_bullets.append(('good', 'Zero gap risk in last 8 quarters — boring is good'))
             elif red_x <= 1:
