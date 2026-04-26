@@ -57,8 +57,6 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
 .tag { flex-shrink: 0; width: 36px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; padding: 6px 0; font-weight: 700; font-size: 12px; letter-spacing: 0.05em; }
 .tag.qw { background: #1e3a8a; color: #dbeafe; border: 1px solid #3b82f6; }
 .tag.ph { background: #7c2d12; color: #fed7aa; border: 1px solid #f97316; }
-.tag.mc { background: #4c1d95; color: #ddd6fe; border: 1px solid #8b5cf6; }
-.tag.sc { background: #713f12; color: #fde68a; border: 1px solid #ca8a04; }
 .tag.wl { background: #334155; color: #cbd5e1; border: 1px solid #64748b; }
 .pick-body { flex: 1; min-width: 0; }
 .pick-row1 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
@@ -74,8 +72,56 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
 .pick-trade strong { color: #f1f5f9; }
 .credit { color: #34d399; font-weight: 600; }
 .pick-meta { display: flex; gap: 12px; font-size: 10px; color: #94a3b8; flex-wrap: wrap; margin-bottom: 4px; }
+
+/* HERO ROW — the two signals that matter */
+.hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.hero-stat { background: #1e293b; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; border: 1px solid #334155; }
+.hero-icon { font-size: 20px; }
+.hero-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.hero-value { font-size: 16px; font-weight: 700; color: #f1f5f9; line-height: 1; margin-top: 2px; }
+.hero-stat > div:not(.hero-icon) { display: flex; flex-direction: column; }
+.hero-edge-great { border-left: 3px solid #34d399; }
+.hero-edge-great .hero-value { color: #34d399; }
+.hero-edge-good { border-left: 3px solid #6ee7b7; }
+.hero-edge-good .hero-value { color: #6ee7b7; }
+.hero-edge-ok { border-left: 3px solid #fbbf24; }
+.hero-edge-ok .hero-value { color: #fbbf24; }
+.hero-gap-perfect { border-left: 3px solid #34d399; }
+.hero-gap-perfect .hero-value { color: #34d399; }
+.hero-gap-good { border-left: 3px solid #6ee7b7; }
+.hero-gap-warn { border-left: 3px solid #fbbf24; }
+.hero-gap-warn .hero-value { color: #fbbf24; }
+.hero-gap-bad { border-left: 3px solid #f87171; }
+.hero-gap-bad .hero-value { color: #f87171; }
+.hero-gap-na { border-left: 3px solid #64748b; }
+
+/* Position sizing */
+.position-size { background: #064e3b; border: 1px solid #10b981; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+.size-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+.size-label { color: #6ee7b7; font-weight: 600; }
+.size-value { color: #f1f5f9; font-weight: 700; font-size: 14px; }
+.size-credit { color: #34d399; font-weight: 600; }
+.size-bp { font-size: 10px; color: #6ee7b7; margin-top: 4px; opacity: 0.8; }
+.size-skip { background: #7f1d1d; border-color: #ef4444; color: #fca5a5; text-align: center; font-size: 12px; font-weight: 600; padding: 8px; }
+
+/* Compact signals */
+.signals-compact { font-size: 11px; color: #94a3b8; margin-bottom: 6px; line-height: 1.5; }
+
+/* Sentiment strip */
+.sentiment-strip { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px 18px; margin-bottom: 14px; }
+.sentiment-title { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; font-weight: 600; }
+.sentiment-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
+.sent-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #0f172a; border-radius: 6px; font-size: 12px; }
+.sent-icon { font-size: 16px; }
+.sent-name { color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
+.sent-value { color: #f1f5f9; font-weight: 700; font-size: 13px; }
+.sent-label { color: #cbd5e1; font-size: 11px; }
+.sectors-row { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 8px; border-top: 1px solid #334155; }
+.sector-chip { font-size: 10px; padding: 3px 8px; border-radius: 4px; background: #0f172a; color: #cbd5e1; }
+.sector-up { color: #34d399; }
+.sector-down { color: #f87171; }
+.sector-flat { color: #94a3b8; }
 .pick-fundamentals { display: flex; gap: 12px; font-size: 10px; color: #94a3b8; flex-wrap: wrap; margin-bottom: 6px; }
-.strict-checks { font-size: 10px; color: #94a3b8; margin-bottom: 6px; padding: 5px 8px; background: rgba(139, 92, 246, 0.1); border-radius: 4px; border-left: 2px solid #8b5cf6; }
 .fund-good { color: #34d399; }
 .fund-warn { color: #fbbf24; }
 .fund-bad { color: #f87171; }
@@ -97,8 +143,6 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
 .legend-tag { font-weight: 700; padding: 1px 6px; border-radius: 3px; font-size: 10px; }
 .legend-tag.qw { background: #1e3a8a; color: #dbeafe; }
 .legend-tag.ph { background: #7c2d12; color: #fed7aa; }
-.legend-tag.mc { background: #4c1d95; color: #ddd6fe; }
-.legend-tag.sc { background: #713f12; color: #fde68a; }
 .legend-tag.wl { background: #334155; color: #cbd5e1; }
 </style>
 </head>
@@ -170,11 +214,26 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
         </div>
         
     
+            <div class="sentiment-strip">
+                <div class="sentiment-title">🌡️ MARKET SENTIMENT</div>
+                <div class="sentiment-grid">
+                <div class="sent-item">
+                    <span class="sent-icon">🛡️</span>
+                    <div>
+                        <div class="sent-name">Put/Call SPY</div>
+                        <div><span class="sent-value">1.52</span> <span class="sent-label">Defensive</span></div>
+                    </div>
+                </div>
+            </div>
+                <div class="sectors-row"><span class="sector-chip"><span class="sector-up">XLK ↑2.8%</span></span><span class="sector-chip"><span class="sector-up">XLY ↑0.8%</span></span><span class="sector-chip"><span class="sector-up">XLB ↑0.2%</span></span><span class="sector-chip sector-flat">·</span><span class="sector-chip"><span class="sector-down">XLC ↓1.6%</span></span><span class="sector-chip"><span class="sector-down">XLV ↓1.4%</span></span><span class="sector-chip"><span class="sector-down">XLI ↓0.9%</span></span></div>
+            </div>
+            
+    
         <div class="day-section">
             <div class="day-header">
                 <div class="day-title">📅 Monday — Mon Apr 27</div>
                 <div class="day-summary">
-                    <span>0 QW</span><span>2 PH</span><span>0 MC</span><span>0 SC</span><span>2 WL</span>
+                    <span>0 QW</span><span>2 PH</span><span>2 WL</span>
                 </div>
             </div>
             
@@ -185,29 +244,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/DPZ/earnings" target="_blank" class="pick-ticker">DPZ</a>
                     <span class="pick-score">9.3/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · Domino's Pizza, Inc. · $367.83</span>
+                    <span class="pick-rec">Domino's Pizza, Inc. · $367.83</span>
                 </div>
                 <div class="pick-trade"><strong>$220P</strong> 2027-01 · -6.8Δ · 40% OTM · <span class="credit">$342 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 15.83x</span>
-                    <span>Exp 7.6% / Act 0.5%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$12.4B</span></span>
-                    <span>P/E <span class="fund-good">20.9</span></span>
-                    <span>D/E <span class="fund-bad">N/A</span></span>
-                    <span>PEG <span class="fund-good">1.65</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-great">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">15.83x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $0.4B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">5 contracts</span>
+                        <span class="size-credit">→ $1,712 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$110,000</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $0.4B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Fri Apr 24 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Fri Apr 24 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -219,29 +287,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/VZ/earnings" target="_blank" class="pick-ticker">VZ</a>
                     <span class="pick-score">9.0/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · Verizon Communications Inc. · $46.38</span>
+                    <span class="pick-rec">Verizon Communications Inc. · $46.38</span>
                 </div>
                 <div class="pick-trade"><strong>$33P</strong> 2027-01 · -6.7Δ · 29% OTM · <span class="credit">$52 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 8.21x</span>
-                    <span>Exp 6.1% / Act 0.7%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$194B</span></span>
-                    <span>P/E <span class="fund-good">11.4</span></span>
-                    <span>D/E <span class="fund-warn">1.75</span></span>
-                    <span>PEG <span class="fund-good">1.14</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-great">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">8.21x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">5 contracts</span>
+                        <span class="size-credit">→ $258 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$16,500</div>
+                </div>
+            
+                <div class="signals-compact">✅ No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Fri Apr 24 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Fri Apr 24 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -253,29 +330,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/NUE/earnings" target="_blank" class="pick-ticker">NUE</a>
                     <span class="pick-score">6.8/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · Nucor Corporation · $214.29</span>
+                    <span class="pick-rec">Nucor Corporation · $214.29</span>
                 </div>
                 <div class="pick-trade"><strong>$140P</strong> 2027-01 · -7.5Δ · 35% OTM · <span class="credit">$355 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 3.1x</span>
-                    <span>Exp 7.8% / Act 2.5%</span>
-                    <span>Red X 1/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$48.8B</span></span>
-                    <span>P/E <span class="fund-warn">28.5</span></span>
-                    <span>D/E <span class="fund-good">0.33</span></span>
-                    <span>PEG <span class="fund-bad">5.21</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-good">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">3.1x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-good">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">1/8 gaps</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $0.7B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">1 contract</span>
+                        <span class="size-credit">→ $355 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$14,000</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $0.7B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Fri Apr 24 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Fri Apr 24 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -287,29 +373,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/CINF/earnings" target="_blank" class="pick-ticker">CINF</a>
                     <span class="pick-score">6.8/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · Cincinnati Financial Corporation · $164.48</span>
+                    <span class="pick-rec">Cincinnati Financial Corporation · $164.48</span>
                 </div>
                 <div class="pick-trade"><strong>$160P</strong> 2026-12 · -34.9Δ · 3% OTM · <span class="credit">$945 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 2.3x</span>
-                    <span>Exp 5.2% / Act 2.2%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$25.6B</span></span>
-                    <span>P/E <span class="fund-good">10.8</span></span>
-                    <span>D/E <span class="fund-good">0.06</span></span>
-                    <span>PEG <span class="fund-warn">2.19</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-good">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">2.3x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $0.2B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">1 contract</span>
+                        <span class="size-credit">→ $945 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$16,000</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $0.2B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Fri Apr 24 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Fri Apr 24 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -320,7 +415,7 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
             <div class="day-header">
                 <div class="day-title">📅 Tuesday — Tue Apr 28</div>
                 <div class="day-summary">
-                    <span>2 QW</span><span>1 PH</span><span>0 MC</span><span>0 SC</span><span>0 WL</span>
+                    <span>2 QW</span><span>1 PH</span><span>0 WL</span>
                 </div>
             </div>
             
@@ -331,29 +426,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/V/earnings" target="_blank" class="pick-ticker">V</a>
                     <span class="pick-score">10.3/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Strong Buy · Visa Inc. · $309.42</span>
+                    <span class="pick-rec">Visa Inc. · $309.42</span>
                 </div>
                 <div class="pick-trade"><strong>$195P</strong> 2028-01 · -6.8Δ · 37% OTM · <span class="credit">$658 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 4.64x</span>
-                    <span>Exp 4.8% / Act 1.0%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$597B</span></span>
-                    <span>P/E <span class="fund-warn">29.1</span></span>
-                    <span>D/E <span class="fund-good">0.55</span></span>
-                    <span>PEG <span class="fund-good">1.69</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-great">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">4.64x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $18.0B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">5 contracts</span>
+                        <span class="size-credit">→ $3,288 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$97,500</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $18.0B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Mon Apr 27 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Mon Apr 27 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -365,29 +469,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/KO/earnings" target="_blank" class="pick-ticker">KO</a>
                     <span class="pick-score">8.8/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · The Coca-Cola Company · $76.63</span>
+                    <span class="pick-rec">The Coca-Cola Company · $76.63</span>
                 </div>
                 <div class="pick-trade"><strong>$50P</strong> 2028-01 · -5.9Δ · 35% OTM · <span class="credit">$107 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 3.99x</span>
-                    <span>Exp 3.7% / Act 0.9%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$330B</span></span>
-                    <span>P/E <span class="fund-warn">25.2</span></span>
-                    <span>D/E <span class="fund-warn">1.40</span></span>
-                    <span>PEG <span class="fund-bad">3.95</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-good">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">3.99x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $0.7B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">3 contracts</span>
+                        <span class="size-credit">→ $321 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$15,000</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $0.7B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Mon Apr 27 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Mon Apr 27 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -399,29 +512,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/MKL/earnings" target="_blank" class="pick-ticker">MKL</a>
                     <span class="pick-score">7.8/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">None · Markel Group Inc. · $1912.45</span>
+                    <span class="pick-rec">Markel Group Inc. · $1912.45</span>
                 </div>
                 <div class="pick-trade"><strong>$1500P</strong> 2026-10 · -7.8Δ · 22% OTM · <span class="credit">$1400 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 10.68x</span>
-                    <span>Exp 5.9% / Act 0.5%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$24.0B</span></span>
-                    <span>P/E <span class="fund-good">11.3</span></span>
-                    <span>D/E <span class="fund-good">0.26</span></span>
-                    <span>PEG <span class="fund-good">1.89</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-great">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">10.68x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $1.0B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">1 contract</span>
+                        <span class="size-credit">→ $1,400 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$150,000</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $1.0B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Mon Apr 27 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Mon Apr 27 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -432,7 +554,7 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
             <div class="day-header">
                 <div class="day-title">📅 Wednesday — Wed Apr 29</div>
                 <div class="day-summary">
-                    <span>3 QW</span><span>0 PH</span><span>0 MC</span><span>0 SC</span><span>4 WL</span>
+                    <span>3 QW</span><span>0 PH</span><span>4 WL</span>
                 </div>
             </div>
             
@@ -441,31 +563,40 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
             <div class="pick-body">
                 <div class="pick-row1">
                     <a href="https://unusualwhales.com/stock/ABBV/earnings" target="_blank" class="pick-ticker">ABBV</a>
-                    <span class="pick-score">10.8/10</span>
+                    <span class="pick-score">10.3/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · AbbVie Inc. · $198.71</span>
+                    <span class="pick-rec">AbbVie Inc. · $198.71</span>
                 </div>
                 <div class="pick-trade"><strong>$115P</strong> 2028-01 · -6.8Δ · 42% OTM · <span class="credit">$378 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 7.3x</span>
-                    <span>Exp 6.9% / Act 0.9%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$351B</span></span>
-                    <span>P/E <span class="fund-bad">84.2</span></span>
-                    <span>D/E <span class="fund-bad">N/A</span></span>
-                    <span>PEG <span class="fund-good">0.47</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-great">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">7.3x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $1.0B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">5 contracts</span>
+                        <span class="size-credit">→ $1,890 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$57,500</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $1.0B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Tue Apr 28 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Tue Apr 28 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -477,29 +608,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/GOOGL/earnings" target="_blank" class="pick-ticker">GOOGL</a>
                     <span class="pick-score">8.8/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Strong Buy · Alphabet Inc. · $344.40</span>
+                    <span class="pick-rec">Alphabet Inc. · $344.40</span>
                 </div>
                 <div class="pick-trade"><strong>$200P</strong> 2028-01 · -6.9Δ · 42% OTM · <span class="credit">$788 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 2.72x</span>
-                    <span>Exp 4.8% / Act 1.7%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$4166B</span></span>
-                    <span>P/E <span class="fund-warn">31.9</span></span>
-                    <span>D/E <span class="fund-good">0.16</span></span>
-                    <span>PEG <span class="fund-warn">2.36</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-good">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">2.72x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $45.7B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">3 contracts</span>
+                        <span class="size-credit">→ $2,362 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$60,000</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $45.7B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Tue Apr 28 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Tue Apr 28 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -511,29 +651,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/AMZN/earnings" target="_blank" class="pick-ticker">AMZN</a>
                     <span class="pick-score">8.7/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Strong Buy · Amazon.com, Inc. · $263.99</span>
+                    <span class="pick-rec">Amazon.com, Inc. · $263.99</span>
                 </div>
                 <div class="pick-trade"><strong>$155P</strong> 2028-01 · -6.9Δ · 41% OTM · <span class="credit">$698 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 2.68x</span>
-                    <span>Exp 5.9% / Act 2.2%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$2839B</span></span>
-                    <span>P/E <span class="fund-warn">36.8</span></span>
-                    <span>D/E <span class="fund-good">0.43</span></span>
-                    <span>PEG <span class="fund-good">1.91</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-good">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">2.68x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-bad">⚠️ Insider sells 3</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">3 contracts</span>
+                        <span class="size-credit">→ $2,092 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$46,500</div>
+                </div>
+            
+                <div class="signals-compact">✅ No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-bear">📊 BEARISH</span>
-                    <span class="fire-time">⏰ Fire Tue Apr 28 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Tue Apr 28 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -545,29 +694,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/ALL/earnings" target="_blank" class="pick-ticker">ALL</a>
                     <span class="pick-score">6.8/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · The Allstate Corporation · $212.88</span>
+                    <span class="pick-rec">The Allstate Corporation · $212.88</span>
                 </div>
                 <div class="pick-trade"><strong>$150P</strong> 2027-01 · -7.7Δ · 30% OTM · <span class="credit">$217 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 2.89x</span>
-                    <span>Exp 5.8% / Act 2.0%</span>
-                    <span>Red X 1/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$55B</span></span>
-                    <span>P/E <span class="fund-good">5.6</span></span>
-                    <span>D/E <span class="fund-good">0.25</span></span>
-                    <span>PEG <span class="fund-good">0.46</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-good">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">2.89x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-good">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">1/8 gaps</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $1.2B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">1 contract</span>
+                        <span class="size-credit">→ $217 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$15,000</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $1.2B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Tue Apr 28 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Tue Apr 28 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -579,29 +737,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/SOFI/earnings" target="_blank" class="pick-ticker">SOFI</a>
                     <span class="pick-score">6.7/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Hold · SoFi Technologies, Inc. · $18.44</span>
+                    <span class="pick-rec">SoFi Technologies, Inc. · $18.44</span>
                 </div>
                 <div class="pick-trade"><strong>$10P</strong> 2027-01 · -8.2Δ · 46% OTM · <span class="credit">$60 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 5.09x</span>
-                    <span>Exp 12.5% / Act 2.4%</span>
-                    <span>Red X 2/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$23.5B</span></span>
-                    <span>P/E <span class="fund-warn">47.3</span></span>
-                    <span>D/E <span class="fund-good">0.18</span></span>
-                    <span>PEG <span class="fund-good">1.17</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-great">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">5.09x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-warn">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">2/8 gaps</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-bad">⚠️ Insider sells 1</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">1 contract</span>
+                        <span class="size-credit">→ $60 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$1,000</div>
+                </div>
+            
+                <div class="signals-compact">✅ No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-bear">📊 BEARISH</span>
-                    <span class="fire-time">⏰ Fire Tue Apr 28 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Tue Apr 28 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -613,29 +780,29 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/MSFT/earnings" target="_blank" class="pick-ticker">MSFT</a>
                     <span class="pick-score">5.8/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Strong Buy · Microsoft Corporation · $424.62</span>
+                    <span class="pick-rec">Microsoft Corporation · $424.62</span>
                 </div>
                 <div class="pick-trade"><strong>$260P</strong> 2028-01 · -6.7Δ · 39% OTM · <span class="credit">$985 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 1.48x</span>
-                    <span>Exp 7.0% / Act 4.7%</span>
-                    <span>Red X 4/8</span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-ok">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">1.48x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-bad">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">4/8 gaps</div>
+                    </div>
                 </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$3156B</span></span>
-                    <span>P/E <span class="fund-warn">26.6</span></span>
-                    <span>D/E <span class="fund-good">0.32</span></span>
-                    <span>PEG <span class="fund-good">1.34</span></span>
-                </div>
-                
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $22.4B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size size-skip">⏸️ Skip — risk filters say no</div>
+                <div class="signals-compact">✅ Buybacks $22.4B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Tue Apr 28 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Tue Apr 28 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -647,29 +814,29 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/META/earnings" target="_blank" class="pick-ticker">META</a>
                     <span class="pick-score">5.5/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Strong Buy · Meta Platforms, Inc. · $675.03</span>
+                    <span class="pick-rec">Meta Platforms, Inc. · $675.03</span>
                 </div>
                 <div class="pick-trade"><strong>$370P</strong> 2028-01 · -6.5Δ · 45% OTM · <span class="credit">$1718 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 1.27x</span>
-                    <span>Exp 7.7% / Act 6.0%</span>
-                    <span>Red X 3/8</span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-ok">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">1.27x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-bad">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">3/8 gaps</div>
+                    </div>
                 </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$1714B</span></span>
-                    <span>P/E <span class="fund-warn">28.7</span></span>
-                    <span>D/E <span class="fund-good">0.39</span></span>
-                    <span>PEG <span class="fund-good">1.10</span></span>
-                </div>
-                
-                <div class="signals-inline"><span class="sig-bad">⚠️ Insider sells 3</span> · <span class="sig-good">🟢 Buybacks $26.2B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size size-skip">⏸️ Skip — risk filters say no</div>
+                <div class="signals-compact">✅ Buybacks $26.2B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Tue Apr 28 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Tue Apr 28 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -680,7 +847,7 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
             <div class="day-header">
                 <div class="day-title">📅 Thursday — Thu Apr 30</div>
                 <div class="day-summary">
-                    <span>4 QW</span><span>3 PH</span><span>0 MC</span><span>0 SC</span><span>0 WL</span>
+                    <span>4 QW</span><span>3 PH</span><span>0 WL</span>
                 </div>
             </div>
             
@@ -691,29 +858,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/MA/earnings" target="_blank" class="pick-ticker">MA</a>
                     <span class="pick-score">10.1/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Strong Buy · Mastercard Incorporated · $504.17</span>
+                    <span class="pick-rec">Mastercard Incorporated · $504.17</span>
                 </div>
                 <div class="pick-trade"><strong>$310P</strong> 2028-01 · -7.2Δ · 39% OTM · <span class="credit">$995 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 4.61x</span>
-                    <span>Exp 5.1% / Act 1.1%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$450B</span></span>
-                    <span>P/E <span class="fund-warn">30.5</span></span>
-                    <span>D/E <span class="fund-warn">2.56</span></span>
-                    <span>PEG <span class="fund-good">1.61</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-great">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">4.61x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $11.7B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">3 contracts</span>
+                        <span class="size-credit">→ $2,985 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$93,000</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $11.7B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Wed Apr 29 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Wed Apr 29 8-10 PM Dubai</span>
                 </div>
                 <div class="fire-warning">⚠️ Fire 1hr before FOMC Decision @ 10:00 PM Dubai</div>
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -725,29 +901,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/LLY/earnings" target="_blank" class="pick-ticker">LLY</a>
                     <span class="pick-score">10.1/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · Eli Lilly and Company · $883.96</span>
+                    <span class="pick-rec">Eli Lilly and Company · $883.96</span>
                 </div>
                 <div class="pick-trade"><strong>$500P</strong> 2028-01 · -6.9Δ · 43% OTM · <span class="credit">$2258 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 3.79x</span>
-                    <span>Exp 9.1% / Act 2.4%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$790B</span></span>
-                    <span>P/E <span class="fund-warn">38.5</span></span>
-                    <span>D/E <span class="fund-warn">1.65</span></span>
-                    <span>PEG <span class="fund-good">1.30</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-good">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">3.79x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $4.1B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">2 contracts</span>
+                        <span class="size-credit">→ $4,515 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$100,000</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $4.1B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Wed Apr 29 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Wed Apr 29 8-10 PM Dubai</span>
                 </div>
                 <div class="fire-warning">⚠️ Fire 1hr before FOMC Decision @ 10:00 PM Dubai</div>
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -759,29 +944,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/MRK/earnings" target="_blank" class="pick-ticker">MRK</a>
                     <span class="pick-score">9.6/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · Merck & Co., Inc. · $111.90</span>
+                    <span class="pick-rec">Merck & Co., Inc. · $111.90</span>
                 </div>
                 <div class="pick-trade"><strong>$65P</strong> 2028-01 · -7.7Δ · 42% OTM · <span class="credit">$280 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 8.36x</span>
-                    <span>Exp 6.4% / Act 0.8%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$276B</span></span>
-                    <span>P/E <span class="fund-good">15.4</span></span>
-                    <span>D/E <span class="fund-good">0.96</span></span>
-                    <span>PEG <span class="fund-bad">3.42</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-great">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">8.36x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $5.1B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">5 contracts</span>
+                        <span class="size-credit">→ $1,398 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$32,500</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $5.1B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Wed Apr 29 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Wed Apr 29 8-10 PM Dubai</span>
                 </div>
                 <div class="fire-warning">⚠️ Fire 1hr before FOMC Decision @ 10:00 PM Dubai</div>
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -793,29 +987,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/AAPL/earnings" target="_blank" class="pick-ticker">AAPL</a>
                     <span class="pick-score">7.2/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · Apple Inc. · $271.06</span>
+                    <span class="pick-rec">Apple Inc. · $271.06</span>
                 </div>
                 <div class="pick-trade"><strong>$170P</strong> 2028-01 · -7.1Δ · 37% OTM · <span class="credit">$625 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 2.12x</span>
-                    <span>Exp 4.2% / Act 2.0%</span>
-                    <span>Red X 1/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$3979B</span></span>
-                    <span>P/E <span class="fund-warn">34.4</span></span>
-                    <span>D/E <span class="fund-warn">1.03</span></span>
-                    <span>PEG <span class="fund-warn">2.44</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-good">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">2.12x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-good">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">1/8 gaps</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-bad">⚠️ Insider sells 2</span> · <span class="sig-good">🟢 Buybacks $91.8B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">2 contracts</span>
+                        <span class="size-credit">→ $1,250 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$34,000</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $91.8B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Wed Apr 29 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Wed Apr 29 8-10 PM Dubai</span>
                 </div>
                 <div class="fire-warning">⚠️ Fire 1hr before FOMC Decision @ 10:00 PM Dubai</div>
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -827,29 +1030,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/CAT/earnings" target="_blank" class="pick-ticker">CAT</a>
                     <span class="pick-score">9.1/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · Caterpillar Inc. · $830.79</span>
+                    <span class="pick-rec">Caterpillar Inc. · $830.79</span>
                 </div>
                 <div class="pick-trade"><strong>$520P</strong> 2027-01 · -7.1Δ · 37% OTM · <span class="credit">$1388 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 6.68x</span>
-                    <span>Exp 10.7% / Act 1.6%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$387B</span></span>
-                    <span>P/E <span class="fund-warn">44.2</span></span>
-                    <span>D/E <span class="fund-warn">2.07</span></span>
-                    <span>PEG <span class="fund-warn">2.23</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-great">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">6.68x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $5.2B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">2 contracts</span>
+                        <span class="size-credit">→ $2,775 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$104,000</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $5.2B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Wed Apr 29 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Wed Apr 29 8-10 PM Dubai</span>
                 </div>
                 <div class="fire-warning">⚠️ Fire 1hr before FOMC Decision @ 10:00 PM Dubai</div>
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -861,29 +1073,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/RCL/earnings" target="_blank" class="pick-ticker">RCL</a>
                     <span class="pick-score">7.5/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · Royal Caribbean Cruises Ltd. · $265.84</span>
+                    <span class="pick-rec">Royal Caribbean Cruises Ltd. · $265.84</span>
                 </div>
                 <div class="pick-trade"><strong>$150P</strong> 2027-01 · -7.2Δ · 44% OTM · <span class="credit">$620 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 3.7x</span>
-                    <span>Exp 11.2% / Act 3.0%</span>
-                    <span>Red X 2/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$72B</span></span>
-                    <span>P/E <span class="fund-good">17.0</span></span>
-                    <span>D/E <span class="fund-warn">2.15</span></span>
-                    <span>PEG <span class="fund-good">1.11</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-good">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">3.7x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-warn">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">2/8 gaps</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $1.2B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">1 contract</span>
+                        <span class="size-credit">→ $620 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$15,000</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $1.2B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Wed Apr 29 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Wed Apr 29 8-10 PM Dubai</span>
                 </div>
                 <div class="fire-warning">⚠️ Fire 1hr before FOMC Decision @ 10:00 PM Dubai</div>
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -895,29 +1116,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/RIVN/earnings" target="_blank" class="pick-ticker">RIVN</a>
                     <span class="pick-score">7.0/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Hold · Rivian Automotive, Inc. · $16.52</span>
+                    <span class="pick-rec">Rivian Automotive, Inc. · $16.52</span>
                 </div>
                 <div class="pick-trade"><strong>$8P</strong> 2027-01 · -7.1Δ · 52% OTM · <span class="credit">$52 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 5.7x</span>
-                    <span>Exp 13.3% / Act 2.3%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$20.5B</span></span>
-                    <span>P/E <span class="fund-bad">N/A</span></span>
-                    <span>D/E <span class="fund-warn">1.13</span></span>
-                    <span>PEG <span class="fund-bad">N/A</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-great">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">5.7x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-bad">⚠️ Insider sells 2</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">3 contracts</span>
+                        <span class="size-credit">→ $158 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$2,400</div>
+                </div>
+            
+                <div class="signals-compact">✅ No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-bear">📊 BEARISH</span>
-                    <span class="fire-time">⏰ Fire Wed Apr 29 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Wed Apr 29 8-10 PM Dubai</span>
                 </div>
                 <div class="fire-warning">⚠️ Fire 1hr before FOMC Decision @ 10:00 PM Dubai</div>
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -928,7 +1158,7 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
             <div class="day-header">
                 <div class="day-title">📅 Friday — Fri May 01</div>
                 <div class="day-summary">
-                    <span>2 QW</span><span>1 PH</span><span>0 MC</span><span>0 SC</span><span>0 WL</span>
+                    <span>2 QW</span><span>1 PH</span><span>0 WL</span>
                 </div>
             </div>
             
@@ -939,29 +1169,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/XOM/earnings" target="_blank" class="pick-ticker">XOM</a>
                     <span class="pick-score">10.1/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · Exxon Mobil Corporation · $148.91</span>
+                    <span class="pick-rec">Exxon Mobil Corporation · $148.91</span>
                 </div>
                 <div class="pick-trade"><strong>$90P</strong> 2028-01 · -6.6Δ · 40% OTM · <span class="credit">$322 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 3.47x</span>
-                    <span>Exp 5.8% / Act 1.7%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$619B</span></span>
-                    <span>P/E <span class="fund-good">22.2</span></span>
-                    <span>D/E <span class="fund-good">0.19</span></span>
-                    <span>PEG <span class="fund-good">1.37</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-good">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">3.47x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $20.3B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">5 contracts</span>
+                        <span class="size-credit">→ $1,610 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$45,000</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $20.3B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Thu Apr 30 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Thu Apr 30 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -973,29 +1212,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/CVX/earnings" target="_blank" class="pick-ticker">CVX</a>
                     <span class="pick-score">9.2/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · Chevron Corporation · $185.21</span>
+                    <span class="pick-rec">Chevron Corporation · $185.21</span>
                 </div>
                 <div class="pick-trade"><strong>$115P</strong> 2028-01 · -7.5Δ · 38% OTM · <span class="credit">$440 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 3.49x</span>
-                    <span>Exp 4.8% / Act 1.4%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$369B</span></span>
-                    <span>P/E <span class="fund-warn">27.9</span></span>
-                    <span>D/E <span class="fund-good">0.24</span></span>
-                    <span>PEG <span class="fund-good">1.14</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-good">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">3.49x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-bad">⚠️ Insider sells 1</span> · <span class="sig-good">🟢 Buybacks $12.1B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">5 contracts</span>
+                        <span class="size-credit">→ $2,200 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$57,500</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $12.1B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Thu Apr 30 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Thu Apr 30 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -1007,29 +1255,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/EL/earnings" target="_blank" class="pick-ticker">EL</a>
                     <span class="pick-score">9.2/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · The Estée Lauder Companies Inc. · $77.82</span>
+                    <span class="pick-rec">The Estée Lauder Companies Inc. · $77.82</span>
                 </div>
                 <div class="pick-trade"><strong>$45P</strong> 2027-01 · -8.2Δ · 42% OTM · <span class="credit">$217 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 5.04x</span>
-                    <span>Exp 11.1% / Act 2.2%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$28.1B</span></span>
-                    <span>P/E <span class="fund-bad">N/A</span></span>
-                    <span>D/E <span class="fund-warn">2.33</span></span>
-                    <span>PEG <span class="fund-good">1.42</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-great">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">5.04x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-perfect">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">ZERO GAPS</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">5 contracts</span>
+                        <span class="size-credit">→ $1,087 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$22,500</div>
+                </div>
+            
+                <div class="signals-compact">✅ No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Thu Apr 30 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Thu Apr 30 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -1040,7 +1297,7 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
             <div class="day-header">
                 <div class="day-title">📅 Monday — Mon May 04</div>
                 <div class="day-summary">
-                    <span>0 QW</span><span>2 PH</span><span>0 MC</span><span>0 SC</span><span>0 WL</span>
+                    <span>0 QW</span><span>1 PH</span><span>0 WL</span>
                 </div>
             </div>
             
@@ -1051,63 +1308,38 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
                     <a href="https://unusualwhales.com/stock/GRAB/earnings" target="_blank" class="pick-ticker">GRAB</a>
                     <span class="pick-score">8.5/10</span>
                     <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Strong Buy · Grab Holdings Limited · $3.90</span>
+                    <span class="pick-rec">Grab Holdings Limited · $3.90</span>
                 </div>
                 <div class="pick-trade"><strong>$2P</strong> 2027-01 · -6.4Δ · 49% OTM · <span class="credit">$9 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 3.25x</span>
-                    <span>Exp 10.5% / Act 3.2%</span>
-                    <span>Red X 1/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$16.0B</span></span>
-                    <span>P/E <span class="fund-bad">65.0</span></span>
-                    <span>D/E <span class="fund-good">0.24</span></span>
-                    <span>PEG <span class="fund-good">1.09</span></span>
+                <div class="hero-row">
+                    <div class="hero-stat hero-edge-good">
+                        <div class="hero-icon">⚡</div>
+                        <div class="hero-label">EDGE</div>
+                        <div class="hero-value">3.25x</div>
+                    </div>
+                    <div class="hero-stat hero-gap-good">
+                        <div class="hero-icon">🛡️</div>
+                        <div class="hero-label">GAP RISK</div>
+                        <div class="hero-value">1/8 gaps</div>
+                    </div>
                 </div>
                 
-                <div class="signals-inline"><span class="sig-bad">⚠️ Insider sells 4</span> · <span class="sig-good">🟢 Buybacks $0.3B</span> · <span class="sig-good">🟢 No red flags</span></div>
+                <div class="position-size">
+                    <div class="size-row">
+                        <span class="size-label">💰 Suggested size</span>
+                        <span class="size-value">2 contracts</span>
+                        <span class="size-credit">→ $18 credit</span>
+                    </div>
+                    <div class="size-bp">Buying power: ~$400</div>
+                </div>
+            
+                <div class="signals-compact">✅ Buybacks $0.3B · No red flags</div>
                 <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Fri May 01 8-10 PM Dubai</span>
+                    <span class="fire-time">🔥 ⏰ Fire Fri May 01 8-10 PM Dubai</span>
                 </div>
                 
                 <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
-                </div>
-            </div>
-        </div>
-        
-        <div class="pick">
-            <div class="tag ph">PH</div>
-            <div class="pick-body">
-                <div class="pick-row1">
-                    <a href="https://unusualwhales.com/stock/CRBG/earnings" target="_blank" class="pick-ticker">CRBG</a>
-                    <span class="pick-score">7.8/10</span>
-                    <span class="timing-pill bmo">BMO</span>
-                    <span class="pick-rec">Buy · Corebridge Financial, Inc. · $26.28</span>
-                </div>
-                <div class="pick-trade"><strong>$15P</strong> 2027-01 · -7.7Δ · 43% OTM · <span class="credit">$68 credit</span></div>
-                <div class="pick-meta">
-                    <span>Edge 4.33x</span>
-                    <span>Exp 9.2% / Act 2.1%</span>
-                    <span>Red X 0/8</span>
-                </div>
-                <div class="pick-fundamentals">
-                    <span>MCap <span class="fund-good">$12.0B</span></span>
-                    <span>P/E <span class="fund-bad">N/A</span></span>
-                    <span>D/E <span class="fund-warn">1.11</span></span>
-                    <span>PEG <span class="fund-bad">N/A</span></span>
-                </div>
-                
-                <div class="signals-inline"><span class="sig-good">🟢 Buybacks $2.1B</span> · <span class="sig-good">🟢 No red flags</span></div>
-                <div class="pick-bottom">
-                    <span class="sentiment sent-neutral">📊 NEUTRAL</span>
-                    <span class="fire-time">⏰ Fire Fri May 01 8-10 PM Dubai</span>
-                </div>
-                
-                <div class="manual-check">
-                    <strong>Verify:</strong> TipRanks · Morningstar · WSJ · Investors.com Pro · Stock Analysis · UW
+                    <strong>Verify:</strong> TipRanks · Investors.com Pro · UW
                 </div>
             </div>
         </div>
@@ -1117,10 +1349,8 @@ h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em;
     
     <div class="legend">
         <strong>Tags:</strong>
-        <span class="legend-tag qw">QW</span> Quality Wheel ($10B+, whitelist) · 
-        <span class="legend-tag ph">PH</span> Premium Hunt ($10B+) · 
-        <span class="legend-tag mc">MC</span> Mid-Cap ($2-10B, strict) · 
-        <span class="legend-tag sc">SC</span> Small-Cap ($300M-2B, strictest) · 
+        <span class="legend-tag qw">QW</span> Quality Wheel · 
+        <span class="legend-tag ph">PH</span> Premium Hunt · 
         <span class="legend-tag wl">WL</span> Watch List<br><br>
         <strong>VIX bands:</strong> &lt;16 calm · 16-21 normal · 21-25 cautious · 25-30 stand down · &gt;30 crisis<br>
         <strong>BMO</strong> = Before Open. <strong>AMC</strong> = After Close. Smart fire-time auto-shifts to avoid major economic events.<br>
