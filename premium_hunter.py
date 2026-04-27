@@ -674,57 +674,64 @@ def get_company_narrative(info):
 
 
 def get_fundamentals_checklist(info, ticker_obj):
-    """4-point checklist: Revenue 5y, Profits 5y, Cash flow, Debt."""
-    checks = {
-        'revenue': None,
-        'profits': None,
-        'cashflow': None,
-        'debt': None,
+    """Real fundamentals: Revenue, Profit, FCF latest values + YoY %."""
+    out = {
+        'revenue_val': None, 'revenue_yoy': None,
+        'profit_val': None, 'profit_yoy': None,
+        'fcf_val': None, 'fcf_yoy': None,
+        'debt_eq': None, 'debt_label': None,
     }
+    
+    def _yoy(latest, prev):
+        if not latest or not prev or prev == 0:
+            return None
+        return (latest - prev) / abs(prev) * 100
+    
     try:
-        # Revenue growth 5y
+        # Revenue
         fin = ticker_obj.financials
         if fin is not None and not fin.empty and 'Total Revenue' in fin.index:
             revs = fin.loc['Total Revenue'].dropna()
-            if len(revs) >= 3:
-                # newer columns first - check trend
-                r_list = revs.tolist()
-                # Check if generally growing
-                growing = sum(1 for i in range(len(r_list) - 1) if r_list[i] > r_list[i+1])
-                checks['revenue'] = growing >= len(r_list) - 2  # allow 1 down year
+            if len(revs) >= 1:
+                out['revenue_val'] = float(revs.iloc[0])
+            if len(revs) >= 2:
+                out['revenue_yoy'] = _yoy(float(revs.iloc[0]), float(revs.iloc[1]))
         
-        # Profit growth
+        # Profit (Net Income)
         if fin is not None and not fin.empty and 'Net Income' in fin.index:
             profs = fin.loc['Net Income'].dropna()
-            if len(profs) >= 3:
-                p_list = profs.tolist()
-                growing = sum(1 for i in range(len(p_list) - 1) if p_list[i] > p_list[i+1])
-                checks['profits'] = growing >= len(p_list) - 2
+            if len(profs) >= 1:
+                out['profit_val'] = float(profs.iloc[0])
+            if len(profs) >= 2:
+                out['profit_yoy'] = _yoy(float(profs.iloc[0]), float(profs.iloc[1]))
         
-        # Cash flow (positive recent)
+        # Free Cash Flow
         cf = ticker_obj.cashflow
         if cf is not None and not cf.empty:
-            cf_keys = ['Free Cash Flow', 'Operating Cash Flow', 'Total Cash From Operating Activities']
-            for k in cf_keys:
+            for k in ['Free Cash Flow', 'Operating Cash Flow', 'Total Cash From Operating Activities']:
                 if k in cf.index:
                     vals = cf.loc[k].dropna()
+                    if len(vals) >= 1:
+                        out['fcf_val'] = float(vals.iloc[0])
                     if len(vals) >= 2:
-                        checks['cashflow'] = (vals.iloc[0] > 0)
-                        break
+                        out['fcf_yoy'] = _yoy(float(vals.iloc[0]), float(vals.iloc[1]))
+                    break
         
-        # Debt - use D/E ratio
+        # Debt/Equity
         de = info.get('debtToEquity')
         if de is not None:
-            # <100 = low/moderate, 100-200 = some, >200 = high
-            if de < 100:
-                checks['debt'] = 'good'
-            elif de < 200:
-                checks['debt'] = 'okay'
+            # yfinance returns D/E as percentage (e.g., 50 = 0.5 ratio)
+            de_ratio = de / 100 if de > 5 else de
+            out['debt_eq'] = de_ratio
+            if de_ratio < 0.5:
+                out['debt_label'] = 'low'
+            elif de_ratio < 1.5:
+                out['debt_label'] = 'moderate'
             else:
-                checks['debt'] = 'bad'
-    except Exception as e:
+                out['debt_label'] = 'heavy'
+    except Exception:
         pass
-    return checks
+    return out
 
 
 def find_alternative_strike(ticker_obj, current_price, target_dte=35, target_delta=-0.16):
@@ -1677,6 +1684,23 @@ def process_ticker(ticker):
         d['fundamentals'] = get_fundamentals_checklist(info, t)
         # Beta from info
         d['beta'] = round(info.get('beta', 0), 2) if info.get('beta') else None
+        # Dividend yield (replaces ATR)
+        dy = info.get('dividendYield') or info.get('trailingAnnualDividendYield')
+        if dy is not None:
+            # yfinance is inconsistent: sometimes 0.063 (decimal), sometimes 6.3 (percent)
+            d['dividend_yield'] = dy * 100 if dy < 1 else dy
+        else:
+            d['dividend_yield'] = None
+        # Max 1-day drop in last 2y (used for safety score)
+        try:
+            hist2y = t.history(period='2y', auto_adjust=False)
+            if hist2y is not None and not hist2y.empty:
+                daily_pct = hist2y['Close'].pct_change().dropna() * 100
+                d['max_1d_drop_pct'] = float(daily_pct.min())  # most negative number
+            else:
+                d['max_1d_drop_pct'] = None
+        except Exception:
+            d['max_1d_drop_pct'] = None
         # Alternative short-dated put
         d['alt_put'] = find_alternative_strike(t, d['price'])
         
@@ -1877,23 +1901,6 @@ def build_indicators_panel(r):
             </div>
         </div>''')
     
-    # RSI
-    rsi = r.get('rsi_14')
-    if rsi is not None:
-        rsi_pos = max(0, min(100, rsi))
-        parts.append(f'''<div class="ind-block">
-            <div class="ind-label-row">
-                <span class="ind-label">RSI 14</span>
-                <span class="ind-val">{rsi:.0f}</span>
-            </div>
-            <div class="bar-rsi">
-                <div class="bar-rsi-low"></div>
-                <div class="bar-rsi-mid"></div>
-                <div class="bar-rsi-high"></div>
-                <div class="bar-marker" style="left: calc({rsi_pos:.0f}% - 4px);"></div>
-            </div>
-        </div>''')
-    
     # 50 DMA
     dma50 = r.get('dma_50')
     if dma50:
@@ -1948,6 +1955,25 @@ def build_indicators_panel(r):
                 <div class="bar-dma-fill" style="left: {fill_left:.0f}%; width: {fill_width:.0f}%; background: {color};"></div>
                 <div class="bar-dma-center"></div>
                 <div class="bar-marker" style="left: calc({marker_left:.0f}% - 4px);"></div>
+            </div>
+        </div>''')
+    
+    # RSI (moved here, just above Bollinger)
+    rsi = r.get('rsi_14')
+    if rsi is not None:
+        rsi_pos = max(0, min(100, rsi))
+        rsi_state = 'oversold' if rsi < 30 else 'overbought' if rsi > 70 else 'normal'
+        rsi_color = '#6ee7b7' if rsi < 30 else '#f87171' if rsi > 70 else '#cbd5e1'
+        parts.append(f'''<div class="ind-block">
+            <div class="ind-label-row">
+                <span class="ind-label">RSI 14</span>
+                <span class="ind-val" style="color: {rsi_color};">{rsi:.0f} · {rsi_state}</span>
+            </div>
+            <div class="bar-rsi">
+                <div class="bar-rsi-low"></div>
+                <div class="bar-rsi-mid"></div>
+                <div class="bar-rsi-high"></div>
+                <div class="bar-marker" style="left: calc({rsi_pos:.0f}% - 4px);"></div>
             </div>
         </div>''')
     
@@ -2033,30 +2059,45 @@ def build_indicators_panel(r):
             {stress_note}
         </div>''')
     
-    # ATR
-    atr = r.get('atr_14')
-    atrs_to = r.get('atrs_to_strike')
-    if atr and atrs_to is not None:
-        # Visual marker: clamp to range 0-25 ATRs  
-        atr_pos = min(25, max(0, atrs_to)) / 25 * 100
-        atr_color = '#34d399' if atrs_to >= 10 else '#fbbf24' if atrs_to >= 5 else '#f87171'
+    # Dividend Yield (replaces ATR — more useful for Wheel: assignment = collect divs)
+    dy = r.get('dividend_yield')
+    if dy is not None and dy > 0:
+        # Color: green for >3%, amber for 1-3%, grey for <1%
+        if dy >= 3:
+            dy_color = '#34d399'
+            dy_label = 'rich'
+        elif dy >= 1:
+            dy_color = '#fbbf24'
+            dy_label = 'modest'
+        else:
+            dy_color = '#cbd5e1'
+            dy_label = 'low'
+        # Bar: 0-8% range
+        dy_pos = min(8, max(0, dy)) / 8 * 100
         parts.append(f'''<div class="ind-block">
             <div class="ind-label-row">
-                <span class="ind-label">ATR · daily move</span>
-                <span class="ind-val" style="color: {atr_color};">{atrs_to:.0f} ATRs to strike</span>
+                <span class="ind-label">Dividend yield</span>
+                <span class="ind-val" style="color: {dy_color};">{dy:.1f}% · {dy_label}</span>
             </div>
             <div class="bar-atr">
-                <div class="bar-atr-bad"></div>
+                <div class="bar-atr-bad" style="background: rgba(100,116,139,.4);"></div>
                 <div class="bar-atr-warn"></div>
                 <div class="bar-atr-good"></div>
-                <div class="bar-marker" style="left: calc({atr_pos:.0f}% - 4px);"></div>
+                <div class="bar-marker" style="left: calc({dy_pos:.0f}% - 4px);"></div>
             </div>
             <div class="bar-atr-labels">
-                <span class="bb-cheap">&lt;5</span>
-                <span class="bb-normal">5-10</span>
-                <span class="bb-expensive">10+ SAFE</span>
+                <span class="bb-cheap">&lt;1%</span>
+                <span class="bb-normal">1-3%</span>
+                <span class="bb-expensive">3%+ rich</span>
             </div>
-            <div class="atr-note">${atr:.2f}/day</div>
+        </div>''')
+    elif dy is None or dy == 0:
+        # No dividend - show flat marker
+        parts.append('''<div class="ind-block">
+            <div class="ind-label-row">
+                <span class="ind-label">Dividend yield</span>
+                <span class="ind-val" style="color: #64748b;">0% · no dividend</span>
+            </div>
         </div>''')
     
     # 2x2 grid: IV rank, Beta, Trend, Short int
@@ -2100,8 +2141,39 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
     
     # Group all picks (top + watch) by date for date-first layout
     all_picks = [(r, 'top') for r in top_picks] + [(r, 'watch') for r in watch]
-    by_date = {}
+    
+    # Filter out picks whose fire date has already passed
+    today_date = datetime.now().date()
+    def _fire_date_for(r):
+        try:
+            ne = r.get('next_earnings')
+            if not ne:
+                return None
+            d = datetime.strptime(ne, '%Y-%m-%d')
+            timing = r.get('earnings_timing', 'TBD')
+            if timing == 'BMO':
+                prev = d - timedelta(days=1)
+                while prev.weekday() >= 5:
+                    prev -= timedelta(days=1)
+                return prev.date()
+            else:  # AMC or TBD: fire same day
+                return d.date()
+        except Exception:
+            return None
+    
+    actionable_picks = []
+    skipped_past_fire = 0
     for r, src in all_picks:
+        fd = _fire_date_for(r)
+        if fd is not None and fd < today_date:
+            skipped_past_fire += 1
+            continue
+        actionable_picks.append((r, src))
+    if skipped_past_fire:
+        print(f"  Filtered {skipped_past_fire} picks whose fire date has passed", flush=True)
+    
+    by_date = {}
+    for r, src in actionable_picks:
         date_key = r.get('next_earnings', 'TBD')
         if date_key not in by_date:
             by_date[date_key] = []
@@ -2205,22 +2277,48 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
             narrative = narrative[:357] + '...'
         
         funds = r.get('fundamentals') or {}
-        def fund_check(key, label):
-            v = funds.get(key)
-            if v is True or v == 'good':
-                return f'<div class="fund-check"><span class="fund-tick">✓</span><span>{label}</span></div>'
-            elif v == 'okay':
-                return f'<div class="fund-check fund-warn"><span class="fund-tilde">~</span><span>{label}</span></div>'
-            elif v is False or v == 'bad':
-                return f'<div class="fund-check fund-bad"><span class="fund-cross">✗</span><span>{label}</span></div>'
-            return f'<div class="fund-check fund-na"><span class="fund-tilde">·</span><span>{label}</span></div>'
         
-        fund_html = (
-            fund_check('revenue', 'Revenue 5y') +
-            fund_check('profits', 'Profits 5y') +
-            fund_check('cashflow', 'Cash flow') +
-            fund_check('debt', 'Debt')
-        )
+        def _fmt_money(v):
+            if v is None:
+                return '—'
+            absv = abs(v)
+            if absv >= 1e12:
+                return f'${v/1e12:.1f}T'
+            if absv >= 1e9:
+                return f'${v/1e9:.1f}B'
+            if absv >= 1e6:
+                return f'${v/1e6:.0f}M'
+            return f'${v:.0f}'
+        
+        def _yoy_pill(yoy):
+            if yoy is None:
+                return '<span class="fund-na">— no data</span>'
+            if yoy >= 5:
+                return f'<span class="fund-up">▲ {yoy:.0f}%</span>'
+            if yoy <= -5:
+                return f'<span class="fund-down">▼ {abs(yoy):.0f}%</span>'
+            return f'<span class="fund-flat">↔ {yoy:+.0f}%</span>'
+        
+        def _row(label, val_str, yoy_html):
+            return f'<div class="fund-row"><span class="fund-label">{label}</span><span class="fund-val">{val_str} {yoy_html}</span></div>'
+        
+        # Revenue / Profit / FCF rows with real values + YoY
+        rev_row = _row('Revenue', _fmt_money(funds.get('revenue_val')), _yoy_pill(funds.get('revenue_yoy')))
+        prof_row = _row('Profit', _fmt_money(funds.get('profit_val')), _yoy_pill(funds.get('profit_yoy')))
+        fcf_row = _row('Free cash', _fmt_money(funds.get('fcf_val')), _yoy_pill(funds.get('fcf_yoy')))
+        
+        # Debt row
+        de = funds.get('debt_eq')
+        de_label = funds.get('debt_label')
+        if de is not None:
+            de_class = 'fund-up' if de_label == 'low' else 'fund-flat' if de_label == 'moderate' else 'fund-down'
+            de_arrow = '✓ low' if de_label == 'low' else '↔ moderate' if de_label == 'moderate' else '▲ heavy'
+            debt_html = f'<span class="fund-val">{de:.2f} <span class="{de_class}">{de_arrow}</span></span>'
+        else:
+            debt_html = '<span class="fund-val"><span class="fund-na">— no data</span></span>'
+        debt_row = f'<div class="fund-row"><span class="fund-label">Debt/Eq</span>{debt_html}</div>'
+        
+        fund_html = rev_row + prof_row + fcf_row + debt_row
         
         # ============================================
         # CLAUDE COMMENTARY — uses real API output when available
@@ -2268,9 +2366,41 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
         # ============================================
         # PRIMARY + ALT PUT ROWS
         # ============================================
+        # Safety score helper: based on OTM% vs max 1-day historical drop (gap risk)
+        # Formula: buffer = OTM% / (1.5 * |max_1d_drop|)
+        max_drop_pct = abs(r.get('max_1d_drop_pct') or 5.0)  # default 5% if no data
+        def _safety_score(otm_pct):
+            buffer = otm_pct / (1.5 * max_drop_pct)
+            if buffer >= 3.0:
+                return 10
+            if buffer >= 2.5:
+                return 9
+            if buffer >= 2.0:
+                return 8
+            if buffer >= 1.5:
+                return 7
+            if buffer >= 1.2:
+                return 6
+            if buffer >= 1.0:
+                return 5
+            if buffer >= 0.85:
+                return 4
+            if buffer >= 0.7:
+                return 3
+            if buffer >= 0.55:
+                return 2
+            return 1
+        
+        def _safety_html(otm_pct):
+            s = _safety_score(otm_pct)
+            tier = 'high' if s >= 8 else 'mid' if s >= 6 else 'low' if s >= 4 else 'danger'
+            label = 'safe' if s >= 8 else 'ok' if s >= 6 else 'risky' if s >= 4 else 'danger'
+            return f'<span class="safety-pill safety-{tier}" title="OTM% vs max 1-day drop ({max_drop_pct:.1f}%)">🛡 {s}/10 {label}</span>'
+        
         if pt:
             primary_dte = pt.get('dte', 0)
             primary_qty = r.get('suggested_size', 1)
+            primary_safety = _safety_html(pt['pct_otm'])
             primary_html = f'''<div class="put-row">
                 <div class="put-dte-large">{primary_dte}<span class="dte-unit">DTE</span></div>
                 <span class="put-strike">${pt["strike"]:.0f}P</span>
@@ -2281,6 +2411,7 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
                     <span>·</span>
                     <span>{pt["pct_otm"]:.0f}% OTM</span>
                     <span class="otm-mult">×{primary_qty}</span>
+                    {primary_safety}
                 </div>
             </div>'''
         else:
@@ -2289,6 +2420,7 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
         alt_html = ''
         if alt:
             alt_dte = alt.get("dte", 35)
+            alt_safety = _safety_html(alt['otm_pct'])
             alt_html = f'''<div class="put-row">
                 <div class="put-dte-large alt">{alt_dte}<span class="dte-unit">DTE</span></div>
                 <span class="put-strike">${alt["strike"]:.0f}P</span>
@@ -2299,6 +2431,7 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
                     <span>·</span>
                     <span>{alt["otm_pct"]:.0f}% OTM</span>
                     <span class="otm-mult">×3</span>
+                    {alt_safety}
                 </div>
             </div>'''
         
@@ -2467,6 +2600,7 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
                     <div class="hero-stat {edge_class}">
                         <div class="hero-icon">⚡</div>
                         <div>
+                            <div class="hero-ticker">{r['ticker']}</div>
                             <div class="hero-label">Edge</div>
                             <div class="hero-value">{edge}x</div>
                         </div>
@@ -2474,6 +2608,7 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
                     <div class="hero-stat {gap_class}">
                         <div class="hero-icon">🛡️</div>
                         <div>
+                            <div class="hero-ticker">{r['ticker']}</div>
                             <div class="hero-label">Gap risk</div>
                             <div class="hero-value">{gap_label}</div>
                         </div>
@@ -2484,7 +2619,7 @@ def render_html(results, scan_date, dashboard, economic_events, caution, sentime
                     <div class="chart-news-col">
                         {chart_html}
                         <div class="news-box">
-                            <div class="box-label">📰 Latest news</div>
+                            <div class="box-label">📰 Latest <strong style="color: #c4b5fd;">{r['ticker']}</strong> news</div>
                             <div class="news-list">{news_html}</div>
                         </div>
                     </div>
@@ -2722,6 +2857,7 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .hero-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }}
 .hero-stat {{ background: #1e293b; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; border: 1px solid #334155; }}
 .hero-icon {{ font-size: 20px; }}
+.hero-ticker {{ font-size: 9px; color: #94a3b8; letter-spacing: 0.06em; font-weight: 700; margin-bottom: 2px; }}
 .hero-label {{ font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }}
 .hero-value {{ font-size: 16px; font-weight: 700; color: #f1f5f9; line-height: 1; margin-top: 2px; }}
 .hero-stat > div:not(.hero-icon) {{ display: flex; flex-direction: column; }}
@@ -2839,7 +2975,14 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .tag-watch {{ background: #1e3a8a; color: #93c5fd; border: 1px solid #3b82f6; }}
 .tag-skip {{ background: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; }}
 .box-text {{ color: #d1fae5; font-size: 12px; line-height: 1.55; margin: 8px 0 10px 0; }}
-.fund-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 8px; border-top: 1px dashed #166534; }}
+.fund-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 5px 14px; padding-top: 8px; border-top: 1px dashed #166534; font-size: 12px; }}
+.fund-row {{ display: flex; align-items: baseline; gap: 8px; }}
+.fund-label {{ color: #6ee7b7; font-size: 11px; flex-shrink: 0; min-width: 62px; }}
+.fund-val {{ font-weight: 600; font-size: 12px; color: #d1fae5; letter-spacing: -0.01em; }}
+.fund-up {{ color: #34d399; font-weight: 700; }}
+.fund-down {{ color: #f87171; font-weight: 700; }}
+.fund-flat {{ color: #cbd5e1; font-weight: 600; }}
+.fund-na {{ color: #64748b; font-style: italic; font-weight: 500; }}
 .fund-check {{ display: flex; align-items: center; gap: 5px; color: #d1fae5; font-size: 10px; }}
 .fund-check.fund-warn {{ color: #fde68a; }}
 .fund-check.fund-bad {{ color: #fca5a5; }}
@@ -2864,6 +3007,11 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .put-strike {{ font-size: 20px; font-weight: 700; color: #93c5fd; text-align: center; }}
 .put-meta-row {{ display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 12px; flex-wrap: wrap; }}
 .put-meta-row .otm-mult {{ color: #fbbf24; font-weight: 700; font-size: 14px; margin-left: auto; }}
+.safety-pill {{ display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 12px; font-weight: 700; font-size: 11px; letter-spacing: 0.02em; }}
+.safety-high {{ background: rgba(16,185,129,.2); color: #6ee7b7; border: 1px solid #10b981; }}
+.safety-mid {{ background: rgba(251,191,36,.18); color: #fbbf24; border: 1px solid #d97706; }}
+.safety-low {{ background: rgba(249,115,22,.18); color: #fdba74; border: 1px solid #ea580c; }}
+.safety-danger {{ background: rgba(239,68,68,.2); color: #fca5a5; border: 1px solid #dc2626; }}
 .put-strike {{ color: #60a5fa; font-size: 22px; font-weight: 500; letter-spacing: -0.015em; }}
 .put-meta {{ color: #cbd5e1; font-size: 13px; font-weight: 400; }}
 .put-qty {{ color: #fbbf24; font-size: 15px; font-weight: 500; text-align: center; }}
@@ -3029,7 +3177,14 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .pick-v18 .bullet-bad > span:last-child {{ color: #fecaca; }}
 
 /* Fundamentals */
-.pick-v18 .fund-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 8px; border-top: 1px dashed #166534; margin-top: 8px; }}
+.pick-v18 .fund-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 5px 14px; padding-top: 8px; border-top: 1px dashed #166534; margin-top: 8px; font-size: 12px; }}
+.pick-v18 .fund-row {{ display: flex; align-items: baseline; gap: 8px; }}
+.pick-v18 .fund-label {{ color: #6ee7b7; font-size: 11px; flex-shrink: 0; min-width: 62px; }}
+.pick-v18 .fund-val {{ font-weight: 600; font-size: 12px; color: #d1fae5; letter-spacing: -0.01em; }}
+.pick-v18 .fund-up {{ color: #34d399; font-weight: 700; }}
+.pick-v18 .fund-down {{ color: #f87171; font-weight: 700; }}
+.pick-v18 .fund-flat {{ color: #cbd5e1; font-weight: 600; }}
+.pick-v18 .fund-na {{ color: #64748b; font-style: italic; font-weight: 500; }}
 .pick-v18 .fund-check {{ display: flex; align-items: center; gap: 5px; font-size: 10px; color: #d1fae5; }}
 .pick-v18 .fund-tick {{ color: #34d399; font-size: 11px; }}
 .pick-v18 .fund-tilde {{ color: #fbbf24; font-size: 11px; }}
@@ -3048,6 +3203,11 @@ h1 {{ font-size: 26px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.02em
 .pick-v18 .put-strike {{ font-size: 20px; font-weight: 700; color: #93c5fd; text-align: center; }}
 .pick-v18 .put-meta-row {{ display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 12px; flex-wrap: wrap; }}
 .pick-v18 .put-meta-row .otm-mult {{ color: #fbbf24; font-weight: 700; font-size: 14px; margin-left: auto; }}
+.pick-v18 .safety-pill {{ display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 12px; font-weight: 700; font-size: 11px; letter-spacing: 0.02em; }}
+.pick-v18 .safety-high {{ background: rgba(16,185,129,.2); color: #6ee7b7; border: 1px solid #10b981; }}
+.pick-v18 .safety-mid {{ background: rgba(251,191,36,.18); color: #fbbf24; border: 1px solid #d97706; }}
+.pick-v18 .safety-low {{ background: rgba(249,115,22,.18); color: #fdba74; border: 1px solid #ea580c; }}
+.pick-v18 .safety-danger {{ background: rgba(239,68,68,.2); color: #fca5a5; border: 1px solid #dc2626; }}
 .pick-v18 .put-strike {{ color: #60a5fa; font-size: 22px; font-weight: 500; letter-spacing: -0.015em; }}
 .pick-v18 .put-meta {{ color: #cbd5e1; font-size: 13px; font-weight: 400; }}
 .pick-v18 .put-qty {{ color: #fbbf24; font-size: 15px; font-weight: 500; text-align: center; }}
