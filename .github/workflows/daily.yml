@@ -1,20 +1,18 @@
-name: Daily Premium Hunt
+name: Beaten-Down Hunter Scan
 
 on:
   schedule:
-    - cron: '0 2 * * 1-4'    # Mon-Thu 6 AM Dubai
-    - cron: '0 13 * * 1-4'   # Mon-Thu 5 PM Dubai
-    - cron: '0 13 * * 5'     # Friday 5 PM Dubai (weekend prep)
+    # 20:30 UTC = 12:30 AM Dubai (just after US close — fresh EOD data)
+    - cron: '30 20 * * 1-5'
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -22,40 +20,23 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run scanner
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python premium_hunter.py
-
-      - name: Send email
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          secure: true
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: Premium Hunter — ${{ github.event.repository.updated_at }}
-          to: mail@ashimparti.net
-          from: Premium Hunter <${{ secrets.EMAIL_USERNAME }}>
-          html_body: file://report.html
-
-      - name: Publish to website
+          UNUSUAL_WHALES_API_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
         run: |
-          mkdir -p docs/archive
-          DATE=$(date +%Y-%m-%d)
-          cp report.html docs/latest.html
-          cp report.html docs/archive/${DATE}.html
-          # Keep only last 14 archive files
-          ls -t docs/archive/*.html 2>/dev/null | tail -n +15 | xargs -r rm
-          python generate_hub.py
+          python beaten_down_hunter.py
 
-      - name: Commit & push website
+      - name: Commit and push report
         run: |
-          git config user.name "Premium Hunter Bot"
-          git config user.email "bot@premiumhunter.local"
-          git add docs/
-          git diff --staged --quiet || git commit -m "Update report $(date +%Y-%m-%d_%H:%M)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          TIMESTAMP=$(date -u +%Y-%m-%d_%H:%M)
+          mkdir -p docs
+          git add docs/latest.html
+          git diff --cached --quiet || git commit -m "Update report ${TIMESTAMP}"
           git push
